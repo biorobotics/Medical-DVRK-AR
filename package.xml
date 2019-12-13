@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package>
+  <name>medical_dvrk_ar</name>
+  <version>1.7.0</version>
+  <description>The package for the MRSD Group Project</description>
+
+  <maintainer email="artia@andrew.cmu.edu">Arti</maintainer>
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>dvrk_robot</build_depend>
+  <run_depend>rospy</run_depend>
+  <run_depend>dvrk_robot</run_depend>
+
+  <!-- The export tag contains other, unspecified, tags -->
+  <export>
+  </export>
+
+</package>
