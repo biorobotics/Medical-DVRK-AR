@@ -49,8 +49,8 @@ Clone the blaser-ros directory from https://github.com/biorobotics/blaser-ros
 ```sh
 cd ~/your_work_space/src
 git clone https://github.com/biorobotics/blaser-ros
+catkin build
 ```
-
 
 Use the XML file to build the dependency
 your_work_space/src/blaser-ros/blaser_pcl/package.xml
