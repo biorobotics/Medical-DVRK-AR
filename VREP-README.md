@@ -12,7 +12,7 @@ source ~/your_work_space/devel/setup.bash
 Convert xacro file to urdf file. It's in the model folder in src
 ```sh
 source ~/your_work_space//src/dvrk-ros/dvrk_model/model
-rosrun xacro xacro your_model_file.xacro > your_model_file.urdf
+rosrun xacro your_model_file.xacro > your_model_file.urdf
 ```
 
 ## Run Coppelia
