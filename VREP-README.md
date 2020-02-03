@@ -1,5 +1,4 @@
-# Medical-DVRK-AR
-MRSD Class project
+# Setup and instructions for VREP
 
 
 ## Prepare urdf file
