@@ -2,7 +2,7 @@
 
 ## Project Goals:)! & Deadlines :(!
 By Feb 18 PR1, we need to
-1. Build the final Physical Model
+1. Cast the liver (with blood pigment) and the stomach (can be colorless)
 2. Complete CAD Design of the platform
 3. Complete Blaser 3D point cloud generation (in simulation?)
 
