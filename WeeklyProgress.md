@@ -16,11 +16,14 @@ Need To Do:
 3. Reprint the Part 2 of the cast model of the tumor (Some one stole it!)   
 4. Recast the model  
 5. Test the blood pigment
+6. Design CAD model of Blaser holder
 
 ## 2. Complete CAD/PCB Design of the platform - Alex!Please update here!
 Already Done:  
 Need To Do: 
 1. Fit the new motors on the moving platform and finish the software part
+2. Test the blood pigment
+3. Design CAD model for Blaser holder
 
 ## 3.1 PCL generation - Blaser Part - updated by Cora & Anjali - Feb 3  
 Already Done:  
