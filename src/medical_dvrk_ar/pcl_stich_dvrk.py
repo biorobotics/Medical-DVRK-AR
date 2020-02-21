@@ -48,7 +48,7 @@ nptype_to_pftype = dict((nptype, pftype) for pftype, nptype in type_mappings)
 pftype_sizes = {PointField.INT8: 1, PointField.UINT8: 1, PointField.INT16: 2, PointField.UINT16: 2,
                 PointField.INT32: 4, PointField.UINT32: 4, PointField.FLOAT32: 4, PointField.FLOAT64: 8}
 
-class: pcl_stiching:
+class pcl_stiching:
 	# this store the sitched 3D pcl
 	self.3d_pcl = []
 
