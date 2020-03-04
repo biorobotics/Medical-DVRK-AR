@@ -8,10 +8,17 @@
   <license>TODO</license>
 
   <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>dvrk_vision</build_depend>
+  <build_depend>bingham_registration</build_depend>
+  <build_depend>message_generation</build_depend>
+  <build_depend>message_runtime</build_depend>
   <build_depend>rospy</build_depend>
   <build_depend>dvrk_robot</build_depend>
   <run_depend>rospy</run_depend>
   <run_depend>dvrk_robot</run_depend>
+  <run_depend>dvrk_vision</run_depend>
+  <run_depend>bingham_registration</run_depend>
+  <run_depend>message_runtime</run_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

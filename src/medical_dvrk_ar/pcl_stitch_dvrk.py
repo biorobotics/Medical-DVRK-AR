@@ -110,8 +110,8 @@ class stiching_3d_pcl:
 
 			self.pc2 = point_cloud2.create_cloud(self.header, self.fields, self.cloud_points) # create the 3dpcl for publish
 
-			pcl_stitcher.pc2.header.stamp = rospy.Time.now()
-			pcl_stitcher.pub.publish(pcl_stitcher.pc2)
+			self.pc2.header.stamp = rospy.Time.now()
+			self.pub.publish(self.pc2)
 
 			# print(self.pc2)
 
