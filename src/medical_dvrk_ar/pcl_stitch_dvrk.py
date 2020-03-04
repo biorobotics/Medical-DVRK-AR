@@ -108,10 +108,14 @@ class stiching_3d_pcl:
 			self.cloud_points.append([point_world_frame[0],point_world_frame[1],point_world_frame[2]])# store every point in the list
 			# # print (" x : %.4f  y: %.4f  z: %.4f" %(p[0],p[1],p[2]))
 
-			self.pc2 = point_cloud2.create_cloud(self.header, self.fields, self.cloud_points) # create the 3dpcl for publish
+		self.pc2 = point_cloud2.create_cloud(self.header, self.fields, self.cloud_points) # create the 3dpcl for publish
 
+
+		# which stamp is correct? or are both?
 			self.pc2.header.stamp = rospy.Time.now()
 			self.pub.publish(self.pc2)
+		pcl_stitcher.pc2.header.stamp = rospy.Time.now()
+		pcl_stitcher.pub.publish(pcl_stitcher.pc2)
 
 			# print(self.pc2)
 
