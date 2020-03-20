@@ -1,8 +1,0 @@
-<launch>
-  <include file="$(find dvrk_vision)/launch/dvrk_registration.launch">
-  	<arg name="width" default="1600"/>
-    <arg name="height" default="600"/>
-    <arg name="yaml" default="$(find dvrk_vision)/defaults/registration_params_blaser.yaml" />
-    <arg name="arm" default="PSM1" />
-  </include>
-</launch>
