@@ -3,9 +3,9 @@ import numpy as np
 # from stereo camera frame to robot frame
 # you get this by running the code in the camera-robot registration folder
 T_cr = np.array([[-0.9968, 0.07188, -0.0329, 0.0286],
-				 [0.0644, 0.4980, -0.8647, 0.3233],
-				 [-0.0457, -0.8642, -0.5011, -0.0094],
-				 [0, 0, 0, 1]])
+		 [0.0644, 0.4980, -0.8647, 0.3233],
+		 [-0.0457, -0.8642, -0.5011, -0.0094],
+		 [0, 0, 0, 1]])
 
 # to calculate Blaser-robot registration (from Blaser to robot)
 # you get this by running Blaser MATLAB code
