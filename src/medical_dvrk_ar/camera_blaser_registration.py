@@ -16,19 +16,19 @@ yaw = 1.429015
 t = np.array([0.031304, 0.001656, -0.003518])
 
 rotx = np.array([[1, 0, 0, 0],
-				[0, np.cos(roll), -np.sin(roll), 0],
-				[0, np.sin(roll), np.cos(roll), 0],
-				[0, 0, 0, 1]])
+		[0, np.cos(roll), -np.sin(roll), 0],
+		[0, np.sin(roll), np.cos(roll), 0],
+		[0, 0, 0, 1]])
 
 roty = np.array([[np.cos(pitch), 0, np.sin(pitch), 0],
-				[0, 1, 0, 0],
-				[-np.sin(pitch), 0, np.cos(pitch), 0],
-				[0, 0, 0, 1]])
+		[0, 1, 0, 0],
+		[-np.sin(pitch), 0, np.cos(pitch), 0],
+		[0, 0, 0, 1]])
 
 rotz = np.array([[np.cos(yaw), -np.sin(yaw), 0, 0],
-				[np.sin(yaw), np.cos(yaw), 0, 0],
-				[0, 0, 1, 0],
-				[0, 0, 0, 1]])
+		[np.sin(yaw), np.cos(yaw), 0, 0],
+		[0, 0, 1, 0],
+		[0, 0, 0, 1]])
 
 T_br = np.dot(np.dot(rotx, roty), rotz)
 T_br[0:3, 3] = t 
