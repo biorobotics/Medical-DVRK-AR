@@ -13,9 +13,9 @@ def main():
 	robot.home()
 	position_start = robot.get_current_position()
 	safe_pos = PyKDL.Frame( PyKDL.Rotation(PyKDL.Vector(0, 1, 0),
-										   PyKDL.Vector(1, 0, 0),
-										   PyKDL.Vector(0, 0,-1)), 
-							PyKDL.Vector(0.02,-0.02,-0.09))
+			        PyKDL.Vector(1, 0, 0),
+			        PyKDL.Vector(0, 0,-1)), 
+			        PyKDL.Vector(0.02,-0.02,-0.09))
 	robot.move(safe_pos)
 	# just some stuff to aid prototyping and visualization
 	# has nothing to do with dVRK controls
@@ -89,9 +89,9 @@ def main():
 	# xr, yr, zr must be in METERS
 	# Adjustments in positions and heights will have to be made before running on dVRK
 	startPos = PyKDL.Frame( PyKDL.Rotation(PyKDL.Vector(0, 1, 0),
-										   PyKDL.Vector(1, 0, 0),
-										   PyKDL.Vector(0, 0,-1)), 
-										   PyKDL.Vector(startPos_x,rearPos_y,-0.08))
+			        PyKDL.Vector(1, 0, 0),
+			        PyKDL.Vector(0, 0,-1)), 
+			        PyKDL.Vector(startPos_x,rearPos_y,-0.08))
 
 	# These step sizes below are calculated based on the width and length of the liver
 	# will have to tune when run on the dVRK
