@@ -1,0 +1,41 @@
+<launch>
+    <arg name="config_path" default = "$(find blaser_vins_config)/config/blaserELP_cyimu_no_extr.yaml" />
+    <arg name="vins_path" default = "$(find feature_tracker)/../" />
+    <arg name="sensors" default="true" />
+    <arg name="video_device" value="/dev/video0"/>
+
+    <group if="$(arg sensors)">
+        <node name="cyimu" pkg="blaser_vins_config" type="cyimu_bringup.py">
+          <param name="port" value="/dev/serial/by-id/usb-Cypress_Semiconductor_USBUART_810302070F0A1164-if00"/>
+          <param name="topic" value="imu"/>
+        </node>
+        <include file="$(find blaser_pcl)/launch/start_ELP2MP_1280x720.launch">
+          <arg name="pcl_frame" value="camera"/>
+          <arg name="video_device" value="$(arg video_device)"/>
+        </include>
+    </group>
+
+    <group unless="$(arg sensors)">
+        <node name="pointcloud_pub" pkg="blaser_pcl" type="blaser_pointcloud_pub_node" output="screen"
+              args="--pcl_frame camera --calib $(find blaser_pcl)/config/calib_ELP_2MP_1280x720.yaml"/>
+    </group>
+    
+    <node name="feature_tracker" pkg="feature_tracker" type="feature_tracker" output="log">
+        <param name="config_file" type="string" value="$(arg config_path)" />
+        <param name="vins_folder" type="string" value="$(arg vins_path)" />
+    </node>
+
+    <node name="vins_estimator" pkg="vins_estimator" type="vins_estimator" output="screen">
+       <param name="config_file" type="string" value="$(arg config_path)" />
+       <param name="vins_folder" type="string" value="$(arg vins_path)" />
+    </node>
+
+    <node name="pose_graph" pkg="pose_graph" type="pose_graph" output="screen">
+        <param name="config_file" type="string" value="$(arg config_path)" />
+        <param name="visualization_shift_x" type="int" value="0" />
+        <param name="visualization_shift_y" type="int" value="0" />
+        <param name="skip_cnt" type="int" value="0" />
+        <param name="skip_dis" type="double" value="0" />
+    </node>
+
+</launch>

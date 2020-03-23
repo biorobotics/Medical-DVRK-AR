@@ -1,0 +1,25 @@
+<launch>
+  <arg name="config_path" default = "$(find blaser_vins_config)/config/blaserELP_cyimu_no_extr.yaml" />
+  <arg name="video_device" default="/dev/video0"/>
+
+  <node name="cyimu" pkg="blaser_vins_config" type="cyimu_bringup.py">
+    <param name="port" value="/dev/serial/by-id/usb-Cypress_Semiconductor_USBUART_810302070F0A1164-if00"/>
+    <param name="topic" value="imu"/>
+  </node>
+
+
+  <!-- blaser video bringup node -->
+  <node name="usb_cam" pkg="usb_cam" type="usb_cam_node"
+        respawn="true">
+        <param name="pixel_format" value="mjpeg"/>
+        <param name="framerate" value="120"/>
+        <param name="image_width" value="1280"/>
+        <param name="image_height" value="720"/>
+        <param name="contrast" value="2"/>
+        <param name="saturation" value="48"/>
+        <param name="video_device" value="$(arg video_device)"/>
+
+        <remap from="/usb_cam/image_raw" to="$(arg im_topic)"/>
+  </node>
+
+</launch>

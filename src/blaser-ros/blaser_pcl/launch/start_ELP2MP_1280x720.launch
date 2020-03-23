@@ -1,0 +1,25 @@
+<!-- CMU Boeing Blaser Project -->
+
+<launch>
+  <arg name="im_topic" default="/ELP2MP/image"/>
+  <arg name="pcl_frame" default="blaser_camera"/>
+  <arg name="pcl_topic" default="/blaser_pcl_topic"/>
+  <arg name="offset" default="0"/>
+  <arg name="video_device" default="/dev/video0" doc="mount point of ELP camera"/>
+
+  <!-- blaser video bringup node -->
+  <node name="blaser_image_pub" pkg="blaser_pcl" type="blaser_image_pub_node"
+        respawn="true" output="log"
+        args="--cam $(arg video_device)
+              --im_topic $(arg im_topic)" />
+
+  <!-- blaser pcl processing node -->
+  <node name="blaser_pcl_node" pkg="blaser_pcl" type="blaser_pointcloud_pub_node"
+        respawn="true" output="screen"
+        args="--calib $(find blaser_pcl)/config/calib_ELP_2MP_1280x720.yaml
+              --im_topic $(arg im_topic)
+              --pcl_frame $(arg pcl_frame) --pcl_topic $(arg pcl_topic)
+              --offset $(arg offset)" >
+  </node>
+</launch>
+

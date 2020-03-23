@@ -1,0 +1,24 @@
+%YAML:1.0
+# Generated manually, might be inaccurate. See cameraParams.mat
+image_width: 1280
+image_height: 720
+camera_name: ELP-2MP
+camera_matrix: !!opencv-matrix
+    rows: 3
+    cols: 3
+    dt: d
+    data: [724.76667, 0, 679.31541, 0, 724.15456, 320.29603, 0, 0, 1] # 1280x720 optimization (laser+intrinsic)
+distortion_model: plumb_bob
+#k1, k2, p1, p2, k3 - k:radial, p:tangential
+distortion_coefficients: !!opencv-matrix
+    rows: 1
+    cols: 5
+    dt: d
+    data: [-0.35390, 0.16348, -0.00210, 0.00036, -0.04566] # 1280x720 optimization
+# laser plane representation in form [A, B, C, D]
+laser_plane: !!opencv-matrix
+    rows: 1
+    cols: 4
+    dt: d
+    data: [-11.72806, -219.06328, -100, 9465.64963] # 1280x720 optimization
+

@@ -1,0 +1,21 @@
+<!-- CMU Boeing Blaser Project -->
+
+<launch>
+  <arg name="im_topic" default="/blaser_camera/image_color"/>
+  <arg name="pcl_frame" default="blaser_camera"/>
+  <arg name="pcl_topic" default="/blaser_pcl_topic"/>
+  <arg name="offset" default="0.0"/>
+
+  <!-- blaser pcl processing node -->
+  <node name="blaser_pcl_node" pkg="blaser_pcl" type="blaser_pointcloud_pub_node"
+        respawn="true" output="screen"
+        args="--calib $(find blaser_pcl)/config/calib_vrep_640x480.yaml
+              --im_topic $(arg im_topic) --offset $(arg offset)
+              --pcl_frame $(arg pcl_frame) --pcl_topic $(arg pcl_topic)" >
+  </node>
+
+  <!-- load laser parameters for vrep environment -->
+  <node name="load_dynconfig" pkg="dynamic_reconfigure" type="dynparam"
+        args="load /blaser_pcl_node $(find blaser_pcl)/config/dyn_reconfig_vrep.yaml"
+        output="screen"/>
+</launch>

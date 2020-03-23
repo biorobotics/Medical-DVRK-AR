@@ -1,0 +1,27 @@
+%YAML:1.0
+# Generated manually, might be inaccurate. See cameraParams.mat
+image_width: 1280
+image_height: 960 # not sure because calibrated on different resolution?
+camera_name: blaser-cam
+camera_matrix: !!opencv-matrix
+    rows: 3
+    cols: 3
+    dt: d
+    data: [1293.41113, 0, 634.48237, 0, 1290.80464, 505.48947, 0, 0, 1] # 1280x960 optimization result
+    #data: [1291.0091, 0, 632.8994, 0, 1281.6781, 481.8581, 0, 0, 1] # Boeing demo calib
+distortion_model: plumb_bob
+#k1, k2, p1, p2, k3 - k:radial, p:tangential
+distortion_coefficients: !!opencv-matrix
+    rows: 1
+    cols: 5
+    dt: d
+    data: [0.19144, -1.05064, 0.00017, -0.00116, 1.27829] # 1280x960 optimization result
+    #data: [0.082179, -0.58595, -0.004745, -0.001698, 0.5557] # Boeing demo calib
+# laser plane representation in form [A, B, C, D]
+laser_plane: !!opencv-matrix
+    rows: 1
+    cols: 4
+    dt: d
+    data: [4.46448, -201.33833, -100, 3613.47034] # 1280x960 (full) optimization result
+    #data: [6.4656, -209.0053, -100, 3554.7673] # Boeing demo calib
+

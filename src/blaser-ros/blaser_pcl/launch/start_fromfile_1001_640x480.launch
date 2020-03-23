@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<!-- CMU Boeing Blaser Project -->
+<launch>
+  <arg name="im_topic" default="/blaser_camera/image_raw"/>
+  <arg name="pcl_frame" default="blaser_camera"/>
+  <arg name="pcl_topic" default="/blaser_pcl_topic"/>
+  <arg name="offset" default="0.0"/>
+  <arg name="video_stream_provider" doc="Specifies video file to playback"/>
+
+  <!-- blaser video bringup node -->
+  <include file="$(find video_stream_opencv)/launch/camera.launch" >
+    <!-- node name and ros graph name -->
+    <arg name="camera_name" value="blaser_camera" />
+    <!-- full path to the video file -->
+    <!-- wget http://techslides.com/demos/sample-videos/small.mp4 -O /tmp/small.mp4 -->
+    <arg name="video_stream_provider" value="$(arg video_stream_provider)" />
+    <!-- set camera fps to (video files not affected) -->
+    <!-- <arg name="set_camera_fps" value="30"/> -->
+    <!-- set buffer queue size of frame capturing to -->
+    <arg name="buffer_queue_size" value="1000" />
+    <!-- throttling the querying of frames to -->
+    <arg name="fps" value="30" />
+    <!-- setting frame_id -->
+    <arg name="frame_id" value="blaser_cam" />
+    <!-- camera info loading, take care as it needs the "file:///" at the start , e.g.:
+    "file:///$(find your_camera_package)/config/your_camera.yaml" -->
+    <arg name="camera_info_url" value="" />
+    <!-- flip the image horizontally (mirror it) -->
+    <arg name="flip_horizontal" value="false" />
+    <!-- flip the image vertically -->
+    <arg name="flip_vertical" value="false" />
+    <!-- enable looping playback -->
+    <arg name="loop_videofile" value="true" />
+    <!-- visualize on an image_view window the stream generated -->
+    <arg name="visualize" value="true" />
+  </include>
+
+  <!-- blaser pcl processing node -->
+  <node name="blaser_pcl_node" pkg="blaser_pcl" type="blaser_pointcloud_pub_node"
+        respawn="true" output="screen"
+        args="--calib $(find blaser_pcl)/config/calib_A1001_640x480.yaml
+              --im_topic $(arg im_topic) --offset $(arg offset)
+              --pcl_frame $(arg pcl_frame) --pcl_topic $(arg pcl_topic)" >
+  </node>
+</launch>
+

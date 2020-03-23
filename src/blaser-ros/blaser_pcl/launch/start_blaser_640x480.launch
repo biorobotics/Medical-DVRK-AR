@@ -1,0 +1,23 @@
+<!-- CMU Boeing Blaser Project -->
+
+<launch>
+  <arg name="im_topic" default="/blaser_camera/image_color"/>
+  <arg name="pcl_frame" default="blaser_camera"/>
+  <arg name="pcl_topic" default="/blaser_pcl_topic"/>
+  <arg name="serial_id" default="A1003"/>
+  <arg name="offset" default="0.0"/>
+
+  <!-- blaser video bringup node -->
+  <node name="blaser_image_pub" pkg="blaser_pcl" type="blaser_image_pub_node"
+        respawn="true" output="log"
+        args="--cam http://blasermini$(arg serial_id).local:8080/?action=stream
+              --im_topic $(arg im_topic)" />
+
+  <!-- blaser pcl processing node -->
+  <node name="blaser_pcl_node" pkg="blaser_pcl" type="blaser_pointcloud_pub_node"
+        respawn="true" output="screen"
+        args="--calib $(find blaser_pcl)/config/calib_$(arg serial_id)_640x480.yaml
+              --im_topic $(arg im_topic) --offset $(arg offset)
+              --pcl_frame $(arg pcl_frame) --pcl_topic $(arg pcl_topic)" >
+  </node>
+</launch>

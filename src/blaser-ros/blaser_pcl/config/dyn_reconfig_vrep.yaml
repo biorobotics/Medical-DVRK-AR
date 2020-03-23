@@ -1,0 +1,110 @@
+!!python/object/new:dynamic_reconfigure.encoding.Config
+dictitems:
+  RMask_1_Hi_H: 180
+  RMask_1_Hi_S: 255
+  RMask_1_Hi_V: 255
+  RMask_1_Lo_H: 0
+  RMask_1_Lo_S: 226
+  RMask_1_Lo_V: 84
+  RMask_2_Hi_H: 147
+  RMask_2_Hi_S: 255
+  RMask_2_Hi_V: 255
+  RMask_2_Lo_H: 111
+  RMask_2_Lo_S: 72
+  RMask_2_Lo_V: 178
+  groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+    dictitems:
+      groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+        dictitems:
+          noise_filters: !!python/object/new:dynamic_reconfigure.encoding.Config
+            dictitems:
+              groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+                state: []
+              id: 5
+              name: noise_filters
+              outlier_removel: true
+              parameters: !!python/object/new:dynamic_reconfigure.encoding.Config
+                state: []
+              parent: 0
+              roi_c_percent: 0.015625
+              roi_r_percent: 0.0594
+              state: true
+              type: ''
+            state: []
+          red_mask_1_hi: !!python/object/new:dynamic_reconfigure.encoding.Config
+            dictitems:
+              RMask_1_Hi_H: 180
+              RMask_1_Hi_S: 255
+              RMask_1_Hi_V: 255
+              groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+                state: []
+              id: 2
+              name: red_mask_1_hi
+              parameters: !!python/object/new:dynamic_reconfigure.encoding.Config
+                state: []
+              parent: 0
+              state: true
+              type: ''
+            state: []
+          red_mask_1_lo: !!python/object/new:dynamic_reconfigure.encoding.Config
+            dictitems:
+              RMask_1_Lo_H: 0
+              RMask_1_Lo_S: 226
+              RMask_1_Lo_V: 84
+              groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+                state: []
+              id: 1
+              name: red_mask_1_lo
+              parameters: !!python/object/new:dynamic_reconfigure.encoding.Config
+                state: []
+              parent: 0
+              state: true
+              type: ''
+            state: []
+          red_mask_2_hi: !!python/object/new:dynamic_reconfigure.encoding.Config
+            dictitems:
+              RMask_2_Hi_H: 147
+              RMask_2_Hi_S: 255
+              RMask_2_Hi_V: 255
+              groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+                state: []
+              id: 4
+              name: red_mask_2_hi
+              parameters: !!python/object/new:dynamic_reconfigure.encoding.Config
+                state: []
+              parent: 0
+              state: true
+              type: ''
+            state: []
+          red_mask_2_lo: !!python/object/new:dynamic_reconfigure.encoding.Config
+            dictitems:
+              RMask_2_Lo_H: 111
+              RMask_2_Lo_S: 72
+              RMask_2_Lo_V: 178
+              groups: !!python/object/new:dynamic_reconfigure.encoding.Config
+                state: []
+              id: 3
+              name: red_mask_2_lo
+              parameters: !!python/object/new:dynamic_reconfigure.encoding.Config
+                state: []
+              parent: 0
+              state: true
+              type: ''
+            state: []
+        state: []
+      id: 0
+      name: Default
+      parameters: !!python/object/new:dynamic_reconfigure.encoding.Config
+        state: []
+      parent: 0
+      simplecb_enabled: false
+      simplecb_percent: 1.0
+      state: true
+      type: ''
+    state: []
+  outlier_removel: true
+  roi_c_percent: 0.015625
+  roi_r_percent: 0.0594
+  simplecb_enabled: false
+  simplecb_percent: 1.0
+state: []

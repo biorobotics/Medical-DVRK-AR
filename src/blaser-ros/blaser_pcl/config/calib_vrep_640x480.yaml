@@ -1,0 +1,29 @@
+%YAML:1.0
+# Generated manually, might be inaccurate. See cameraParams.mat
+image_width: 640
+image_height: 480
+camera_name: blaser-cam
+camera_matrix: !!opencv-matrix
+    rows: 3
+    cols: 3
+    dt: d
+    data: [555.69291, 0, 312.24240, 0, 552.85270, 235.04101, 0, 0, 1]
+
+distortion_model: plumb_bob
+#k1, k2, p1, p2, k3 - k:radial, p:tangential
+distortion_coefficients: !!opencv-matrix
+    rows: 1
+    cols: 5
+    dt: d
+    data: [-0.03564, 0.34619, -0.00684, -0.00597, -0.85458]
+laser_plane: !!opencv-matrix
+    rows: 1
+    cols: 4
+    dt: d
+    data: [-0.66794, -175.64613, -100, 3612.94719]
+
+handeye_transform: !!opencv-matrix
+    rows: 1
+    cols: 6
+    dt: d
+    data: [0.099203, -0.008309, 0.000058, 0.076050, 1.555585, 0.585311]

@@ -1,0 +1,16 @@
+if the blaser say "goodbye", it is because it was not shut down properly last time
+
+method:
+ps aux | grep stream 
+(look for the id)
+sudo kill -s 9 <id>
+
+1.mrsd launch file
+2.rviz configuration
+
+
+~/MRSD_AR_ws$ rosservice call /blaser_pcl/blaser_pcl_stitch_srv "start: 1
+pause: 0
+clear: 1
+leaf_size: 0.0" 
+status: 0
