@@ -1,22 +1,18 @@
 #!/usr/bin/env python 
 import rospy
-from geometry_msgs.msg import Pose2D, PoseStamped, WrenchStamped
-from force_sensor_gateway.msg import ForceSensorData
-import yaml
 from dvrk import psm
 import PyKDL
 import numpy as np
-from dvrk_vision.uvtoworld import makeTexturedObjData
-from dvrk_vision.uvtoworld import UVToWorldConverter
 from tf_conversions import posemath
-from dvrk_vision.clean_resource_path import cleanResourcePath
-import force_sensor_gateway.ransac as ransac
-from IPython import embed
-from sensor_msgs.msg import RegionOfInterest
-from IPython import embed
 
 import os.path
 functionPath = os.path.dirname(os.path.realpath(__file__))
+
+# home:
+# [[-2.69849e-11,           1,-9.91219e-17;
+#             1, 2.69849e-11, 7.34641e-06;
+#   7.34641e-06, 9.91194e-17,          -1]
+# [ 4.16909e-07, 4.50335e-07,     -0.1135]]
 
 def resolvedRates(config,currentPose,desiredPose):
     # compute pose error (result in kdl.twist format)
@@ -78,7 +74,7 @@ def arrayToPyKDLFrame(array):
     pos = PyKDL.Vector(array[0][3],array[1][3],array[2][3])
     return PyKDL.Frame(rot,pos)
 
-def rotationFromVector(vectorDesired):
+def fingertipConstraint(vectorDesired):
     ''' Find a PyKDL rotation from a vector using taylor series expansion
     '''
     vector = vectorDesired / vectorDesired.Norm()
@@ -102,7 +98,7 @@ def rotationFromVector(vectorDesired):
 
     kdlRotation = arrayToPyKDLRotation(R.tolist())
     z, y  = kdlRotation.GetEulerZYZ()[0:2]
-    print(z,y)
+    #print(z,y)
     retval = PyKDL.Rotation()
     retval.DoRotZ(z)
     retval.DoRotY(y)
@@ -110,13 +106,11 @@ def rotationFromVector(vectorDesired):
     return retval
 
 
-class Probe2DServer(object):
-    def __init__(self, cameraTransform, objPath, scale):
+class ControlServer(object):
+    def __init__(self, startp, endp):
 
         self.organPoseSub = rospy.Subscriber('registration_pose',
                                              PoseStamped, self.poseCb)
-
-        self.cameraTransform = cameraTransform
         self.organTransform = None
         self.robot = psm('PSM2')
 
@@ -147,12 +141,12 @@ class Probe2DServer(object):
         self.normalDistance = 0.005 # Meters
 
         self.safeSpot = PyKDL.Frame()
-        self.safeSpot.p = PyKDL.Vector(0,0.00,-0.05)
-        self.safeSpot.M = rotationFromVector(PyKDL.Vector(0,0,-.1))
+        self.safeSpot.p = startp
+        self.safeSpot.M = fingertipConstraint(startp)
 
         self.scanEndSpot = PyKDL.Frame()
-        self.scanEndSpot.p = PyKDL.Vector(0,0.00,-0.05)
-        self.scanEndSpot.M = rotationFromVector(PyKDL.Vector(0,0, .1))
+        self.scanEndSpot.p = endp
+        self.scanEndSpot.M = fingertipConstraint(endp)
         
         self.robot.move(self.safeSpot)
         self.resetZRot()
@@ -165,8 +159,6 @@ class Probe2DServer(object):
 
     def resetZRot(self):
         curr = self.robot.get_current_joint_position()
-        # if(abs(curr[3]) > np.pi):
-        #     print("RESETTING Z")
         self.robot.move_joint(np.array([curr[0],
                                         curr[1],
                                         curr[2],
@@ -178,7 +170,6 @@ class Probe2DServer(object):
     def move(self,desiredPose, maxForce):
         currentPose = self.robot.get_desired_position()
         currentPose.p = currentPose.p
-        #forceArray = np.empty((0,4), float)
         displacements = np.array([0], float)
         # Remove z rotation
         angle = np.arccos(PyKDL.dot(desiredPose.M.UnitX(), currentPose.M.UnitX()))
@@ -205,24 +196,14 @@ class Probe2DServer(object):
             self.rate.sleep()
             measuredPose_current = self.robot.get_current_position()
             currentDisplacement = measuredPose_current.p-measuredPose_previous.p
-            # currentDisplacement =  xDotMotion.vel.Norm() * self.resolvedRatesConfig['dt']
             currentDisplacement = PyKDL.dot(currentDisplacement, desiredPose.M.UnitZ())
-            # currentDisplacement = displacements[len(displacements)-1] + currentDisplacement
-            #forceArray = np.append(forceArray, data, axis = 0)
+
             displacements = np.append(displacements, [currentDisplacement])
         return displacements.tolist()
-        #return displacements.tolist(), forceArray.tolist()
 
 if __name__=="__main__":
-    rospy.init_node('probe_2D_server')
-    yamlFile = cleanResourcePath("package://dvrk_vision/defaults/registration_params_cmu.yaml")
-    with open(yamlFile, 'r') as stream:
-        data = yaml.load(stream)
-    cameraTransform = arrayToPyKDLFrame(data['transform'])
+    startp = PyKDL.Vector(0.06,0.00,-0.05)
+    endp = PyKDL.Vector(-0.06,0.00,-0.05)
+    rospy.init_node('Control_server')
     np.set_printoptions(precision=2)
-    # print np.matrix(data['transform'])
-    # print cameraTransform.M
-    meshPath = rospy.get_param("~mesh_path")
-    scale = rospy.get_param("~scale")
-    objPath = cleanResourcePath(meshPath)
-    server = Probe2DServer(cameraTransform, objPath, scale)
+    server = ControlServer()
