@@ -1,40 +1,33 @@
 #!/usr/bin/env python
 """
 Function:
-1. receive rosmsg_poincloud2 from specific topic, and save pcd file of two frame for registration and tracking
+1. receive rosmsg_poincloud2 from specific topic
+2. apply HSV mask
+3. save pcd file of two frame for registration and tracking
+4. call registration function
 
 Pre-requisite
 1. roslaunch realsense2_camera rs_camera.launch filters:=pointcloud
 
-Main reference (This code is not based on the most recent Open3d API)
-1. https://github.com/felixchenfy/open3d_ros_pointcloud_conversion/blob/master/lib_cloud_conversion_between_Open3D_and_ROS.py
-
-Param: (detail in convertAndSavePCD() function)
-1.topic_name: the topic of ros_msg:poindcloud2, default is for realsense
-2.time_interval: the time interval for recording the "target" and "source", for further registration and tracking
-3.save_directory: the directory to save pcd file
-
 Author: Cora
-March 30
 
-TODO:
-1. How to move the save npy out of the callback?
-2. Integrate Anjali's segmentation code
 """
 
 import numpy as np
 import open3d
-from ctypes import * # convert float to uint 32
 import os
-
-from seg import segmentation
 
 import rospy
 from std_msgs.msg import Header
 from sensor_msgs.msg import PointCloud2, PointField
 from sensor_msgs import point_cloud2
-from hsv_threshold import *
+
 from frameRegistration import *
+import ros_numpy
+
+from seg import segmentation
+from hsv_threshold import rgb_to_hsv, in_range_hsv
+from hsv_points_filter import hsv_points_filter
 
 import datetime
 
@@ -63,173 +56,50 @@ class Pc2toPCD():
 
         # Set the minimum interval time to save the pcl
         self.time_interval = 0.5
-
-    def display_inlier_outlier(self, cloud, ind):
-        inlier_cloud = cloud.select_down_sample(ind)
-        outlier_cloud = cloud.select_down_sample(ind, invert=True)
-
-        print("Showing outliers (red) and inliers (gray): ")
-        outlier_cloud.paint_uniform_color([1, 0, 0])
-        inlier_cloud.paint_uniform_color([0.8, 0.8, 0.8])
-        open3d.visualization.draw_geometries([inlier_cloud, outlier_cloud])
-
-    def convertCloudFromRosToOpen3d(self, ros_cloud):
-        """
-        Param:
-            ros_cloud: sensor_msgs.point_cloud2 in ROS
-        Return:
-            open3d_cloud: open3d.geometry().PointCloud() in OPEN3D
-        """
-        
-        converter_start_time = datetime.datetime.now()
-        convert_ros_cloud_to_list_start_time = datetime.datetime.now()
-        # Bit operations
-        BIT_MOVE_16 = 2**16
-        BIT_MOVE_8 = 2**8
-        convert_rgbUint32_to_tuple = lambda rgb_uint32: ((rgb_uint32 & 0x00ff0000)>>16, (rgb_uint32 & 0x0000ff00)>>8, (rgb_uint32 & 0x000000ff))
-        convert_rgbFloat_to_tuple = lambda rgb_float: convert_rgbUint32_to_tuple(int(cast(pointer(c_float(rgb_float)), POINTER(c_uint32)).contents.value))
-
-        # Get cloud data from ros_cloud
-        field_names = ("x", "y", "z", "rgb")
-        cloud_data = list(point_cloud2.read_points(ros_cloud, field_names = field_names, skip_nans=True))
-        convert_ros_cloud_to_list_end_time = datetime.datetime.now()
-        convert_ros_cloud_to_list_interval = (convert_ros_cloud_to_list_end_time-convert_ros_cloud_to_list_start_time).microseconds   
-        print("point_cloud2.read_points Interval=", convert_ros_cloud_to_list_interval*1e-6, "seconds")
-
-        # Check empty
-        open3d_cloud = open3d.geometry.PointCloud()
-        if len(cloud_data)==0:
-            print("Converting an empty cloud")
-            return None
-
-        # Set open3d_cloud
-        
-        if "rgb" in field_names:
-            IDX_RGB_IN_FIELD=3 # x, y, z, rgb
-            
-            # Get xyz
-            xyzrgb_to_list_start = datetime.datetime.now()
-            xyz = [(x,y,z) for x,y,z,rgb in cloud_data]
-
-            # Get rgb
-            # Check whether int or float
-            if type(cloud_data[0][IDX_RGB_IN_FIELD])==float: # if float (from pcl::toROSMsg)
-                rgb = [ convert_rgbFloat_to_tuple(rgb) for x,y,z,rgb in cloud_data ]
-
-            else:
-                rgb = [convert_rgbUint32_to_tuple(rgb) for x,y,z,rgb in cloud_data ]
-            
-            xyzrgb_to_list_end = datetime.datetime.now()
-            xyzrgb_to_list_interval = (xyzrgb_to_list_end-xyzrgb_to_list_start).microseconds   
-            print("xyzrgb_to_list Interval=", xyzrgb_to_list_interval*1e-6, "seconds")
-            # N x 1 Bool vector
-            # N is the total number of points
-            
-            """If you can compile opencv, use the following code"""
-            hsv_mask_start_time = datetime.datetime.now()
-            mask = segmentation(rgb)
-            # print("opencv mask shape = ", mask.shape)
-            # print("cv mask, ", np.count_nonzero(mask))
-            """If you can compile opencv, use the above code"""
-
-            hsv_mask_end_time = datetime.datetime.now()
-            hsv_mask_interval = (hsv_mask_end_time-hsv_mask_start_time).microseconds   
-            print("Hsv Mask Interval=", hsv_mask_interval*1e-6, "seconds")
-            
-            # N x 3 Bool vector
-            # N is the total number of points
-            # 0 in the array means we don't need the point
-            xyz = np.array(xyz)
-            rgb = np.array(rgb)
-
-            """If you can't compile OpenCV, please use the following manually wrote function"""
-            # hsv = rgb_to_hsv(rgb)
-            # mask = in_range_hsv(hsv).reshape(-1,1)
-            # print("manual hsv mask shape =", mask.shape)
-            # print("manual mask, ", np.count_nonzero(mask))
-            """If you can't compile OpenCV, please use the above manually wrote function"""
-            
-            apply_mask_start_time = datetime.datetime.now()
-            x = xyz[:, 0].reshape(-1,1) * mask
-            y = xyz[:, 1].reshape(-1,1) * mask
-            z = xyz[:, 2].reshape(-1,1) * mask
-
-            r = rgb[:, 0].reshape(-1,1) * mask
-            g = rgb[:, 1].reshape(-1,1) * mask
-            b = rgb[:, 2].reshape(-1,1) * mask
-
-            masked_x = np.ma.masked_equal(x, 0).compressed()
-            masked_y = np.ma.masked_equal(y, 0).compressed()
-            masked_z = np.ma.masked_equal(z, 0).compressed()
-
-            masked_r = np.ma.masked_equal(r, 0).compressed()
-            masked_g = np.ma.masked_equal(g, 0).compressed()
-            masked_b = np.ma.masked_equal(b, 0).compressed()
-            
-            
-            # N' x 3 where N' is the amount of qualified points
-            masked_xyz = np.vstack((masked_x, masked_y, masked_z)).T
-            masked_rgb = np.vstack((masked_r, masked_g, masked_b)).T
-            
-            apply_mask_end_time = datetime.datetime.now()
-            apply_mask_interval = (apply_mask_end_time-apply_mask_start_time).microseconds   
-            print("apply seg mask interval=", apply_mask_interval*1e-6, "seconds")
-            # print("The filtered points amount is = ", xyz.shape)
-
-            # combine
-            open3d_cloud.points = open3d.utility.Vector3dVector(np.array(masked_xyz))
-            open3d_cloud.colors = open3d.utility.Vector3dVector(np.array(masked_rgb)/255.0)
-        else:
-            xyz = [(x,y,z) for x,y,z in cloud_data ] # get xyz
-            open3d_cloud.points = open3d.utility.Vector3dVector(np.array(xyz))
-
-        converter_end_time = datetime.datetime.now()
-        converter_interval = (converter_end_time-converter_start_time).microseconds-apply_mask_interval-hsv_mask_interval-xyzrgb_to_list_interval-convert_ros_cloud_to_list_interval
-        print("other convert datatype operation interval=", converter_interval*1e-6, "seconds")
-        return open3d_cloud
         
     def callback(self, ros_cloud, save_directory):
         
+        # timer
         overall_start_time = datetime.datetime.now()
+        hsv_mask_start_time = datetime.datetime.now()
 
+        # apply hsv filter on point cloud
         self.received_ros_cloud=ros_cloud
-        # rospy.loginfo("-- Received ROS PointCloud2 message.")
+        self.open3d_pointcloud = hsv_points_filter(self.received_ros_cloud)
 
-        self.open3d_pointcloud = self.convertCloudFromRosToOpen3d(self.received_ros_cloud)
+        # timer
+        hsv_mask_end_time = datetime.datetime.now()
+        hsv_mask_interval = (hsv_mask_end_time-hsv_mask_start_time).microseconds   
+        print("Hsv Mask Interval=", hsv_mask_interval*1e-6, "seconds")
+        outlier_sample_start_time = datetime.datetime.now()
 
         # remove outlier
-        down_sample_start_time = datetime.datetime.now()
         self.open3d_pointcloud= self.open3d_pointcloud.voxel_down_sample(voxel_size=0.01)
-        down_sample_end_time = datetime.datetime.now()
-        down_sample_interval = (down_sample_end_time-down_sample_start_time).microseconds   
-        print("downsample interval=", down_sample_interval*1e-6, "seconds")
-
-        outlier_sample_start_time = datetime.datetime.now()
+        # remove points that have less that 250 neighbours in 0.1 unit
         cl, ind = self.open3d_pointcloud.remove_radius_outlier(nb_points=250, radius=0.1)
+
+        # timer
         outlier_sample_end_time = datetime.datetime.now()
         outlier_sample_interval = (outlier_sample_end_time-outlier_sample_start_time).microseconds
         print("remove outlier interval=", outlier_sample_interval*1e-6, "seconds")
+        save_ply_npy_file_start = datetime.datetime.now()
         
         # self.display_inlier_outlier(self.open3d_pointcloud, ind)
+        # for vidualization, assign the self.open3d_pointcloud after visualization
         self.open3d_pointcloud = cl
-
-        # rospy.loginfo("Received point cloud and converted it to {0}".format(self.open3d_pointcloud))
         
+        # save pcl file
         self.appenddata(save_directory=os.getcwd())
         
-
-        start_time = datetime.datetime.now()
-        # since open3D doesn't have the pointcloud stamp, you can use this function to save it as an .npy file
-        # TODO: move it out of the callback to the end of this program
         self.saveTimeStampsAsNpy(save_directory=os.getcwd())
-        end_time = datetime.datetime.now()
-        interval = (end_time-start_time).microseconds
-        print("save npy interval=", interval*1e-6, "seconds")
 
-        overall_mask_end_time = datetime.datetime.now()
-        overall_mask_interval = (overall_mask_end_time-overall_start_time).microseconds   
-        print("OVERALL Time Calculate Transformation Between Two Frame =", overall_mask_interval*1e-6, "seconds")
-
+        # timer
+        save_ply_npy_file_end = datetime.datetime.now()
+        save_ply_npy_file_interval = (save_ply_npy_file_end-save_ply_npy_file_start).microseconds 
+        print("save ply npy file interval", save_ply_npy_file_interval*1e-6, "seconds")
+        overall_end_time = datetime.datetime.now()
+        overall_interval = (overall_end_time-overall_start_time).microseconds   
+        print("OVERALL Time Calculate Transformation Between Two Frame =", overall_interval*1e-6, "seconds")
         print("++++++++++New Frame++++++++++++")
         
         # # uncomment this if you want to vidualize the pointcloud
@@ -246,7 +116,7 @@ class Pc2toPCD():
             self.isFirstFrame = False
             
             # Since there is no past data, set both current and last frame with the points
-            self.last_frame_open3d_cloud = self.convertCloudFromRosToOpen3d(self.received_ros_cloud)
+            self.last_frame_open3d_cloud = hsv_points_filter(self.received_ros_cloud)
             self.current_frame_open3d_cloud = self.open3d_pointcloud
             
             # save the last frame points to the target.pcd
@@ -297,9 +167,7 @@ class Pc2toPCD():
 
         print("Transformation Between Last Frame and Current Frame = ", transformation)
 
-        
-        
-                
+                  
     def init_node(self, node_name):
         rospy.init_node(node_name, anonymous=True)
 
@@ -315,7 +183,7 @@ class Pc2toPCD():
         np.save(output_filename, np.array(self.time_stamps), allow_pickle=True)
         # rospy.loginfo("-- Write timestamps.npy to: "+output_filename)
         
-    def convertPC2toPCDandSaveFile(self, topic_name="camera/depth/color/points", time_interval=0.01, save_directory=os.getcwd()):
+    def hsv_points_filter(self, topic_name="camera/depth/color/points", time_interval=0.01, save_directory=os.getcwd()):
         """
         params:
             topic_name: the topic of ros_msg:poindcloud2, default is for realsense
@@ -335,7 +203,7 @@ if __name__ == "__main__":
     # At first initiate the node or you can skip this if you already init some other node
     my_pcl_pcd_converter.init_node("test_for_converter_pcl_2_pcd")
     # you can give param of topic, interval, and directory here
-    my_pcl_pcd_converter.convertPC2toPCDandSaveFile(topic_name="camera/depth/color/points", time_interval=0.01, save_directory=os.getcwd())    
+    my_pcl_pcd_converter.hsv_points_filter(topic_name="camera/depth/color/points", time_interval=0.01, save_directory=os.getcwd())    
 
     # Remember to add rospy.spin() in your integration to avoid python file close
     rospy.spin()

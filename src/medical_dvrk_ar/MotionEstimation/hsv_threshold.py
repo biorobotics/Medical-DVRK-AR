@@ -72,8 +72,8 @@ def in_range_hsv(hsv):
     liver_light1 = (-14, 98, 35)
     liver_dark1 = (16, 245, 193)
 
-    liver_light1 = (-14, 0, 0)
-    liver_dark1 = (255, 255, 255)
+    # liver_light1 = (-14, 0, 0)
+    # liver_dark1 = (255, 255, 255)
 
     mask1 = ma.masked_inside(hsv, liver_light1, liver_dark1).mask
     mask1 = mask1 * 1
