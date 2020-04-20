@@ -45,7 +45,6 @@ class main():
 
         rospy.init_node('liver_pose', anonymous=True)
         self.pub = rospy.Publisher('pose', Pose, queue_size=1)
-        # self.rate = rospy.Rate(2)
         
     def callback(self, ros_cloud, save_directory):
 
@@ -57,6 +56,8 @@ class main():
         current_position = self.open3d_pointcloud.get_center()
         self.pubPose(current_position)
         self.position.append(current_position)
+        np.save('position.npy', np.array(self.position))
+        np.save('time.npy', np.array(self.time_stamps))
 
     def pubPose(self, position_array):
         """
@@ -74,25 +75,6 @@ class main():
         p.orientation.z = 0.0
         p.orientation.w = 0.0
         self.pub.publish(p)
-
-    def saveTimeStampsAsNpy(self, save_directory=os.getcwd()):
-        """
-        params:
-            save_directory: save all the time stamps of the pointcloud, should be the same length of all transformation matrix
-                            default is the file folder of the python file
-        return:
-            None
-        """
-
-        output_filename = os.path.join(save_directory, "timestamps")
-        center_filename = os.path.join(save_directory, "center")
-
-        # rospy.loginfo('time_stamps', self.time_stamps)
-        np.save(output_filename, np.array(self.time_stamps), allow_pickle=True)
-        np.save(center_filename, np.array(self.position), allow_pickle=True)
-        # print(self.position)
-            
-        # rospy.loginfo("-- Write timestamps.npy to: "+output_filename)
         
     def hsv_points_filter(self, topic_name, time_interval, save_directory=os.getcwd()):
         """
