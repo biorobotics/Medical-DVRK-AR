@@ -1,6 +1,7 @@
 from sklearn.decomposition import PCA
 import numpy as np
 from matplotlib import pyplot as plt
+from scipy.interpolate import interp1d
 
 def xyz_pca(xyzrpy, kept_variance_ratio=0.9):
     """
@@ -39,11 +40,41 @@ def xyz_pca(xyzrpy, kept_variance_ratio=0.9):
     # if you use the projection_matrix later, you need to move your data center at the origin manually
     return kept_dim, ratio_sum, projection_matrix, reduced_data
 
+
+def freq_detection(wave, sampling_rate=4):
+    #Apply FFT to convert periodic time-domain motion to frequency domain
+    ft = np.fft.fft(wave) #/len(wave)
+    print(np.fft.fft(wave).shape)
+    print(np.fft.rfft(wave))
+    spectre = np.fft.fft(wave)
+    freqs = np.abs(np.fft.fftfreq(wave.size, 1/sampling_rate))
+
+    # To know at what frequency, the FFT has highest magnitude (dominant frequency of data)
+    idx = np.argmax(np.abs(ft))
+    frequency = freqs[idx]
+    print('Dominant frequency of motion of this data =',frequency)
+    return frequency
+
+def frequency_processing_with_interpolation(wave_raw, timestamps, sampling_rate=4):
+    sampling_interval = 1 / sampling_rate
+    ### use reduced_data from pca as input wave [time,N_axes]
+    N_axes = wave_raw.shape[1]
+    time_num = int((timestamps[-1] - timestamps[0]) / sampling_interval)
+    times = np.linspace(timestamps[0], time_num * sampling_interval + timestamps[0], num=time_num, endpoint=True)
+    wave = np.zeros((time_num, N_axes))
+    frequencies = np.zeros(N_axes)
+    for axis in range(N_axes):
+        wave_single_axis = wave_raw[:,axis]
+        f = interp1d(timestamps, wave_single_axis, kind='cubic')
+        wave[:,axis] = np.array([f(time) for time in times])
+        frequencies[axis] = freq_detection(wave[:,axis], sampling_rate)
+    return frequencies
+
 if __name__ == "__main__":
     pose = np.load('position.npy', allow_pickle=True)
     time = np.load('time.npy', allow_pickle=True)
     kept_dim, ratio_sum, projection_matrix, reduced_data = xyz_pca(pose)
-
+    frequencies = frequency_processing_with_interpolation(pose, time)
 
     f, axarr = plt.subplots(4, sharex=True)
     axarr[0].plot(time, pose[:,0])
