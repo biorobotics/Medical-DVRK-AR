@@ -44,8 +44,6 @@ def xyz_pca(xyzrpy, kept_variance_ratio=0.9):
 def freq_detection(wave, sampling_rate=4):
     #Apply FFT to convert periodic time-domain motion to frequency domain
     ft = np.fft.fft(wave) #/len(wave)
-    print(np.fft.fft(wave).shape)
-    print(np.fft.rfft(wave))
     spectre = np.fft.fft(wave)
     freqs = np.abs(np.fft.fftfreq(wave.size, 1/sampling_rate))
 
@@ -74,7 +72,8 @@ if __name__ == "__main__":
     pose = np.load('position.npy', allow_pickle=True)
     time = np.load('time.npy', allow_pickle=True)
     kept_dim, ratio_sum, projection_matrix, reduced_data = xyz_pca(pose)
-    frequencies = frequency_processing_with_interpolation(pose, time)
+    frequencies = frequency_processing_with_interpolation(reduced_data, time)
+    print(frequencies)
 
     f, axarr = plt.subplots(4, sharex=True)
     axarr[0].plot(time, pose[:,0])
@@ -85,4 +84,5 @@ if __name__ == "__main__":
     axarr[2].set_title('Realsense-Z')
     axarr[3].plot(time, reduced_data)
     axarr[3].set_title("keep {} dim, variance ratio sum = {}".format(kept_dim, ratio_sum))
+    
     plt.show()
