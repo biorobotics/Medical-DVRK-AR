@@ -23,11 +23,7 @@ The tracking is important for modeling the moving organ and control compensation
 2) Analyze the dominant motion frequencies with FFT.
 
 ### pcdConverter.py - Alex
-1) Receive rosmsg_poincloud2 from specific topic, and save pcd file of two frame forregistration and tracking
-2) Calculate 4x4 transformation function between two consecutive pointcloud data 
-3) Publish a static pointcloud to rostopic "static_pointcloud"
-4) Save all transformation function
+Tracking the movement of liver using colored point cloud registration algorithm
 
 ### frameRegistration.py -  Alex
-
 Register two colored point cloud based on colored point registration ICP and return the transformation
