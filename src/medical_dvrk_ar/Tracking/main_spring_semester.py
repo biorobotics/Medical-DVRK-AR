@@ -1,13 +1,26 @@
+#!/usr/bin/env python
 """
-Function:
-1. receive rosmsg_poincloud2 from specific topic
-2. apply HSV mask
-3. save pcd file of two frame for registration and tracking
-4. call registration function
-Pre-requisite
-1. roslaunch realsense2_camera rs_camera.launch filters:=pointcloud
-Author: Cora
+The final main function for the spring semester. 
+Function: 
+    1) Read in pointcloud data 
+    2) Segment out unwanted pointcloud
+    3) Save positions and time in npy files for FFT and PCA
+    4) Publish the center position of the segmented pointcloud "pose"
+    5) Publish static pointcloud "static_pointcloud"
+
+Param:  
+    Input:
+        1) RealSense camera pointcloud data
+    Output:
+        1) publish "static_pointcloud" topic  \\Can be visualized in Rviz
+        2) publish "pose" topic \\Can be visualized with rqt_plot \pose\position\y
+        3) 
+
+Author: Alex + Cora
+May 1th
+
 """
+
 
 import numpy as np
 import open3d
@@ -21,10 +34,8 @@ from sensor_msgs import point_cloud2
 from frameRegistration import *
 import ros_numpy
 
-from Segmentation_setting import segmentation
-from hsv_threshold import rgb_to_hsv, in_range_hsv
+from segmentation_setting import segmentation
 from hsv_points_filter import hsv_points_filter
-
 
 import datetime
 
@@ -37,7 +48,6 @@ class main():
         self.open3d_pointcloud = None
 
         self.time_stamps = list() # save all the time stamp
-
         self.position = list()
 
         rospy.init_node('liver_pose', anonymous=True)
@@ -56,27 +66,33 @@ class main():
         
     def callback(self, ros_cloud, save_directory):
 
+        #received raw pointcloud data from realsense camera
         self.received_ros_cloud=ros_cloud
-        # print(np.array(self.received_ros_cloud).shape)
         
+        #segment out the liver from the background
         self.open3d_pointcloud = hsv_points_filter(self.received_ros_cloud)
-        # print('pointcloud data after hsv',np.array(self.open3d_pointcloud.points).shape)
 
-
+        #store every time stamp for FFT analysis
         self.time_stamps.append(self.received_ros_cloud.header.stamp.to_sec())
 
+        #get the center position of the segmented pointcloud and publish it
         current_position = self.open3d_pointcloud.get_center()
         self.pubPose(current_position)
         self.position.append(current_position)
+
+        #save position and time in .npy file for FFT and PCA analysis
         np.save('position.npy', np.array(self.position))
         np.save('time.npy', np.array(self.time_stamps))
 
         self.pubcloud()
 
     def pubPose(self, position_array):
+        
         """
-        position_array : N X 3, contain xyz
-        publish ros pose msg
+        Funtion: 
+            Publish center position at each time frame as a ros topic
+        Params: 
+            position_array : N X 3, contain xyz
         """
     
         p = Pose()
@@ -95,20 +111,20 @@ class main():
 
 
     def pubcloud(self):
+        """
+        Function:
+            Publish a static pointcloud by subtracting the center postion 
+        """
 
-
-        # print(self.pos)
         pointcloud = []
-        # print(np.array(self.open3d_pointcloud).shape)
-        # print('pointcloud data after hsv',np.array(self.open3d_pointcloud.points).shape)
 
+        #Rotate the filtered pointcloud to align with the original(recieved pointcloud) position and orientation in 3D space
         rotational_x = np.eye(3)
         #rotate along x - axis
         rotational_x[1] = [0, 0, 1]
         rotational_x[2] = [0, -1 , 0]
 
         rotational_y = np.eye(3)
-
         #rotate along y - axis
         rotational_y[0] = [0, 0, 1]
         rotational_y[2] = [-1, 0 , 0]
@@ -117,32 +133,20 @@ class main():
         #rotate along z - axis
         rotational_z[0] = [0, 1, 0]
         rotational_z[1] = [-1, 0 , 0]
-
-
-
-        
+ 
         current_position = self.open3d_pointcloud.get_center()
-        print('cur pos', current_position)
         self.pubPose(current_position)
-        print('self.pos:', self.pos)
-        test = np.array([0, 0, 0])
         self.open3d_pointcloud = self.open3d_pointcloud.translate(-self.pos)
-
         self.open3d_pointcloud = self.open3d_pointcloud.rotate(rotational_x)
         self.open3d_pointcloud = self.open3d_pointcloud.rotate(rotational_z)
 
-
-        # print('pointcloud data after translation',np.array(self.open3d_pointcloud.points).shape)
         
+        #convert open3d_pointcloud to ros pointcloud data type
         self.static_pointcloud = np.array(self.open3d_pointcloud.points)
-
-        # print(self.static_pointcloud.shape)
 
         for itr in range (len(self.static_pointcloud)):
             pointcloud.append(self.static_pointcloud[itr][:3].tolist())
-        
-        # print(type(pointcloud))
-        # print(type(self.received_ros_cloud))
+
 
         self.pc2 = point_cloud2.create_cloud(self.header, self.FIELDS_XYZ, pointcloud)
 
@@ -151,7 +155,7 @@ class main():
 
                 
         
-    def hsv_points_filter(self, topic_name, time_interval, save_directory=os.getcwd()):
+    def hsv_points(self, topic_name, time_interval, save_directory=os.getcwd()):
         """
         params:
             topic_name: the topic of ros_msg:poindcloud2, default is for realsense
@@ -170,6 +174,6 @@ if __name__ == "__main__":
     # An example of using the above class
     my_main = main()
     
-    my_main.hsv_points_filter(topic_name="camera/depth/color/points", time_interval=0, save_directory=os.getcwd())    
+    my_main.hsv_points(topic_name="camera/depth/color/points", time_interval=0, save_directory=os.getcwd())    
 
     rospy.spin()
