@@ -21,7 +21,7 @@ from sensor_msgs import point_cloud2
 from frameRegistration import *
 import ros_numpy
 
-from seg import segmentation
+from Segmentation_setting import segmentation
 from hsv_threshold import rgb_to_hsv, in_range_hsv
 from hsv_points_filter import hsv_points_filter
 
