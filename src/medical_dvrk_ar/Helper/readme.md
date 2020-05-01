@@ -11,7 +11,7 @@ This file will call seg.py in the tracking folder. Copy it if necessary.
 
 ### manual_crop_point_cloud_without_hsvfilter
 
-This helper allow you to use open3d package to crop the point cloud manually.
+This helper allows you to use open3d package to crop the point cloud manually.
 It's created for testing the influence of the noise to the accuracy of registration.
 
 ## scanning_result_and_gt_for_compare_cloud
