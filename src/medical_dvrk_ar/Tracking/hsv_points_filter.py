@@ -1,3 +1,21 @@
+#!/usr/bin/env python
+"""
+Function:
+1. Called by "Main_Spring_Semester.py"
+2. Will call "segementation_setting.py" to obtain the segmentation mask 
+
+Param:  
+    Input:
+        1) raw ros_pointcloud directly from topic(sensor_msgs/PointCloud2 Message) 
+    Output:
+        1) masked point cloud data (open3d.geometry.PointCloud)
+
+
+Author: Alex + Cora
+May 1th
+
+"""
+
 import numpy as np
 import datetime
 import open3d
@@ -5,8 +23,9 @@ import ros_numpy
 from std_msgs.msg import Header
 from sensor_msgs.msg import PointCloud2, PointField
 from sensor_msgs import point_cloud2
+from hsv_threshold import rgb_to_hsv, in_range_hsv
+from segmentation_setting import segmentation
 
-from seg import segmentation
 def hsv_points_filter(ros_cloud):
         """
         take all the points from ros_cloud
