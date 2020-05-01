@@ -7,7 +7,7 @@ Code in this folder will not be called by any main code
 This helper is used at the beginning of the system. 
 It's used to visualized the hsv-based segmented point cloud so that the user can find a best hsv value for that environment.  
 It will receive the point cloud from the realsense, and publish a new topic 'filtered_pointcloud'.
-This file will call seg.py in the tracking folder. Copy it if necessary.
+You can visualize it with rviz
 
 ### manual_crop_point_cloud_without_hsvfilter
 
