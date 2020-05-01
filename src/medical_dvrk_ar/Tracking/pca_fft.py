@@ -17,7 +17,7 @@ Param:
         1) PCA result (results in plots)
         2) FFT result (result in terminal)
 
-Author: Cora
+Author: Cora + Chang
 May 1th
 
 """
