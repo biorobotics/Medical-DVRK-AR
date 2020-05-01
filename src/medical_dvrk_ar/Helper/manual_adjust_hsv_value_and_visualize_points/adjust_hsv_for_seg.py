@@ -127,15 +127,6 @@ class HSV_set():
         result = np.hstack((masked_xyz, masked_rgb))
         return result
 
-    def display_inlier_outlier(self, cloud, ind):
-        inlier_cloud = cloud.select_down_sample(ind)
-        outlier_cloud = cloud.select_down_sample(ind, invert=True)
-
-        print("Showing outliers (red) and inliers (gray): ")
-        outlier_cloud.paint_uniform_color([1, 0, 0])
-        inlier_cloud.paint_uniform_color([0.8, 0.8, 0.8])
-        open3d.visualization.draw_geometries([inlier_cloud, outlier_cloud])
-
     def callback(self, ros_cloud):
         """
         will be called when received point cloud from realsense
