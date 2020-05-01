@@ -14,7 +14,7 @@ This file will call seg.py in the tracking folder. Copy it if necessary.
 This helper allows you to use open3d package to crop the point cloud manually.
 It's created for testing the influence of the noise to the accuracy of registration.
 
-## scanning_result_and_gt_for_compare_cloud
+### scanning_result_and_gt_for_compare_cloud
 
 This helper include the ground truth of the CAD model (ply file) and the trimmed scanned point cloud (ply file).
 roughly_align_gt_and_scanned_points.py will mannualy align the center and the scale of the gt points with the scanned result.
