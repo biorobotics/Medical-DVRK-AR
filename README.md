@@ -1,5 +1,10 @@
 # DVRK Augmented reality using laser scanner
 
+## Installation
+
+- Install ROS
+- Install dvrk software following [these instructions](https://github.com/jhu-dvrk/sawIntuitiveResearchKit/wiki/CatkinBuild)
+
 ## Simulation
 
 To run robot simulator:
