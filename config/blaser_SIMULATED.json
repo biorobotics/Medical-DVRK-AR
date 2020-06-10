@@ -1,0 +1,50 @@
+{
+    "robot_topic": "/dvrk/PSM1/position_cartesian_current",
+    "robot_base_frame": "PSM1_psm_base_link",
+    "blaser_range":0.1,
+    "blaser_nrays":50,
+    "blaser_noise":0.0005,
+    "blaser_view_angle":90,
+    "objects":
+    [
+        {
+            "header":
+            {
+                "frame_id": "PSM1_psm_base_link"
+            },
+            "ns": "collision",
+            "id": 0,
+            "color":
+            {
+                "r":1,
+                "g":0,
+                "b":0,
+                "a":1
+            },
+            "scale":
+            {
+                "x":1,
+                "y":1,
+                "z":1
+            },
+            "pose":
+            {
+                "position":
+                {
+                    "x":0,
+                    "y":0,
+                    "z":-0.15
+                },
+                "orientation":
+                {
+                    "x":0,
+                    "y":0,
+                    "z":0,
+                    "w":1
+                }
+            },
+            "type": 10,
+            "mesh_resource": "package://medical_dvrk_ar/data/wave.stl"
+        }
+    ]
+}
