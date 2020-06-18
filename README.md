@@ -8,7 +8,8 @@
 ## Simulation
 At first:
 `roscore`
-`roslaunch dvrk_robot dvrk_arm_rviz.launch`
+`roslaunch dvrk_robot dvrk_arm_rviz.launch arm:=PSM1'
+
 
 Don't need to do this, -> To run robot simulator:
 
