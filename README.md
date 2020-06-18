@@ -9,7 +9,9 @@
 At first:
 `roscore` 
 Then: 
-`roslaunch dvrk_robot dvrk_arm_rviz.launch arm:=PSM1'
+`roslaunch dvrk_robot dvrk_arm_rviz.launch'
+Last:
+'rosrun dvrk_robot blaser_sim.py -j /home/alex/MRSD_AR_ws/src/dvrk-ros/dvrk_robot/config/blaser_SIMULATED.json'
 
 Don't need to do this, -> To run robot simulator:
 `roslaunch medical_dvrk_ar dvrk_arm_rviz.launch`
