@@ -16,7 +16,7 @@ Then:
 
 Last:
 
-'rosrun dvrk_robot blaser_sim.py -j /home/alex/MRSD_AR_ws/src/dvrk-ros/dvrk_robot/config/blaser_SIMULATED.json`
+`rosrun dvrk_robot blaser_sim.py -j /home/alex/MRSD_AR_ws/src/dvrk-ros/dvrk_robot/config/blaser_SIMULATED.json`
 
 Don't need to do the following
 
