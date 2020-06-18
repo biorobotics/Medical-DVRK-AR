@@ -14,6 +14,8 @@ Then:
 
 `roslaunch dvrk_robot dvrk_arm_rviz.launch arm:=PSM1`
 
+Press Power-On, then Home
+
 Last:
 
 `rosrun dvrk_robot blaser_sim.py -j /home/alex/MRSD_AR_ws/src/dvrk-ros/dvrk_robot/config/blaser_SIMULATED.json`
