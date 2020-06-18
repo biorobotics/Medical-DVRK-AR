@@ -6,8 +6,11 @@
 - Install dvrk software following [these instructions](https://github.com/jhu-dvrk/sawIntuitiveResearchKit/wiki/CatkinBuild)
 
 ## Simulation
+At first:
+`roscore`
+`roslaunch dvrk_robot dvrk_arm_rviz.launch`
 
-To run robot simulator:
+Don't need to do this, -> To run robot simulator:
 
 `roslaunch medical_dvrk_ar dvrk_arm_rviz.launch`
 
