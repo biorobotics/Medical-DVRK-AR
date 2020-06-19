@@ -15,7 +15,9 @@
 Source the workspace and then:
 
 `roslaunch dvrk_robot dvrk_arm_rviz.launch arm:=PSM1` (Alex)
+
 or
+
 `roslaunch medical_dvrk_ar dvrk_arm_rviz.launch arm:=PSM1` (if you use the 'medical_dvrk_ar' env instead of 'dvrk_robot')
 
 Press Power-On, then Home
