@@ -31,7 +31,7 @@ or
 `rosrun medical_dvrk_ar blaser_sim.py -j PATH_TO_MEDICAL_DVRK_AR_WS/config/blaser_SIMULATED.json`
 
 
-**Basically, if you use the 'medical_dvrk_ar' env, do the following:**
+##Basically, if you use the 'medical_dvrk_ar' env, do the following:
 
 `roslaunch medical_dvrk_ar dvrk_arm_rviz.launch`
 
