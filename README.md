@@ -33,7 +33,7 @@ or
 
 ## Basically, if you use the 'medical_dvrk_ar' env, do the following:
 
-`roslaunch medical_dvrk_ar dvrk_arm_rviz.launch`
+`roslaunch medical_dvrk_ar dvrk_arm_rviz.launch arm:=PSM1`
 
 To run blaser simulator:
 
