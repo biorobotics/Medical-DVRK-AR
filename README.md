@@ -52,17 +52,18 @@ your_workspace/
 ```
 ## dVRK Simulation
 **First terminal:**
-
-`roscore` 
-
+```
+$ roscore 
+```
 **Second terminal:**
 
-`source ~/your_workspace/devel/setup.bash`
-`roslaunch medical_dvrk_ar dvrk_arm_rviz.launch arm:=PSM1`
-
+```
+$ source ~/your_workspace/devel/setup.bash
+$ roslaunch medical_dvrk_ar dvrk_arm_rviz.launch arm:=PSM1
+```
 Press Power-On, then Home
 
 **Third terminal:**
-
-`rosrun medical_dvrk_ar blaser_sim.py -j ~/your_workspace/src/Medical-DVRK-AR/config/blaser_SIMULATED.json`
-
+```
+$ rosrun medical_dvrk_ar blaser_sim.py -j ~/your_workspace/src/Medical-DVRK-AR/config/blaser_SIMULATED.json
+```
