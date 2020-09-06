@@ -67,3 +67,5 @@ Press Power-On, then Home
 ```
 $ rosrun medical_dvrk_ar blaser_sim.py -j ~/your_workspace/src/Medical-DVRK-AR/config/blaser_SIMULATED.json
 ```
+
+Add rostopcs 1)pointcloud2 2)makerarray in rviz visualiztion
