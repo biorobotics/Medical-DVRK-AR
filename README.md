@@ -68,4 +68,10 @@ Press Power-On, then Home
 $ rosrun medical_dvrk_ar blaser_sim.py -j ~/your_workspace/src/Medical-DVRK-AR/config/blaser_SIMULATED.json
 ```
 
-Add rostopcs 1)pointcloud2 2)makerarray in rviz visualiztion
+**In Rviz:**
+After launching Rviz, add in the following two rostopics to visualize the results 1)pointcloud2 2)makerarray.
+
+## How to import different .stl files into Rviz
+1. Add the .stl file in the "data/" folder.
+2. Edit "/config/blaser_SIMULATED.json" line:47(mesh_resource) to the new .stl file path.
+3. Run blaser_sim.py .
