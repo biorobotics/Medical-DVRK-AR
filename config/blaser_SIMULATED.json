@@ -2,9 +2,9 @@
     "robot_topic": "/dvrk/PSM1/position_cartesian_current",
     "robot_base_frame": "PSM1_psm_base_link",
     "blaser_range":0.1,
-    "blaser_nrays":50,
+    "blaser_nrays":100,
     "blaser_noise":0.0005,
-    "blaser_view_angle":90,
+    "blaser_view_angle":70,
     "objects":
     [
         {
@@ -33,18 +33,18 @@
                 {
                     "x":0,
                     "y":0,
-                    "z":-0.15
+                    "z":-0.25
                 },
                 "orientation":
                 {
-                    "x":0,
-                    "y":0,
-                    "z":0,
-                    "w":1
+                 "x":0,
+                 "y":0,
+                 "z":0,
+                 "w":1
                 }
             },
             "type": 10,
-            "mesh_resource": "package://medical_dvrk_ar/data/wave.stl"
+            "mesh_resource": "package://medical_dvrk_ar/data/liver2.stl"
         }
     ]
 }

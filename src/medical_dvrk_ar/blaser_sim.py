@@ -63,6 +63,9 @@ def make_obb(stl_file, position=(0,0,0), orientation=(0,0,0,1), scale=(1,1,1)):
                                             orientation[1],
                                             orientation[2],
                                             orientation[3]).GetRotAngle()
+    print("angle", angle)
+    print("angle / 180", angle/np.pi*180)
+    print("axis", axis)
 
     transform = vtk.vtkTransform()
     transform.Scale(scale)
@@ -75,7 +78,7 @@ def make_obb(stl_file, position=(0,0,0), orientation=(0,0,0,1), scale=(1,1,1)):
     transformFilter.Update()
 
     mesh = transformFilter.GetOutput()
-
+    # print("number of points", mesh.GetNumberOfPoints())
     # If there are no points in 'vtkPolyData' something went wrong
     if mesh.GetNumberOfPoints() == 0:
         raise ValueError(
@@ -163,7 +166,9 @@ class BlaserSim(object):
             ends.append([start[0] + vec.x() * self.blaser_range,
                          start[1] + vec.y() * self.blaser_range,
                          start[2] + vec.z() * self.blaser_range])
+        # print(len(ends))
         collisions, colors = self.collide(start, ends)
+        # print(len(collisions))
         points = [[v[0] + n[0], v[1] + n[1], v[2] + n[2], c] for v, n, c in zip(collisions, noise, colors)]
         # Create pointcloud message
         header = Header()
