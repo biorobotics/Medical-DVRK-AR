@@ -56,6 +56,21 @@ class Task_Planner:
         self.robot.home()
         # TODO: how to iterate through these points
         ordered_points = self.visit_plan()
+        '''
+        Have the robot move to an initial position first.
+        Assign a frame at this initial position
+        This may not be necessary if we end up using normals for 3D-scanning; 
+        we hadn't used normals when we generated 3D point cloud on hardware
+        '''
+        
+        safe_pos = PyKDL.Frame( PyKDL.Rotation(PyKDL.Vector(0, 1, 0),
+                                               PyKDL.Vector(1, 0, 0),
+                                               PyKDL.Vector(0, 0,-1)), 
+                                PyKDL.Vector(-0.05,0,-0.10))
+        self.robot.move(safe_pos)
+        '''
+            The While loop below is for the overall planner after incorporating motion compensation
+        '''
         while True:
             self.predicted_data = self.points_prediction()
             cur_time = rospy.Time.now()
@@ -66,16 +81,36 @@ class Task_Planner:
                     estimated_pos = self.estimated_point(self.robot_pose, point)
 
                     #move to next point
+                    # Assuming the next point is passed in as a dictionary
+                    estimated_point_vec = (estimated_point['pos_x'], estimated_point['pos_y'], estimated_point['pos_z'])
+                    self.robot.move(PyKDL.Vector(estimated_point_vec))
 
                     self.robot_pose = self.robot.get_current_position()
                     cur_time = rospy.Time.now()
                     self.cur_point = point
                     if point == self.number_of_data:
                         return
+        '''
+            For PR7, there liver is going to be static. So the robot just needs to go to each of the points
+            passed through the dictionary. The While loop below is to get a 3D point cloud of the static liver
+        '''
+        for key in data:
+            point_x = data[key]['pos_x']
+            point_y = data[key]['pos_y']
+            point_z = data[key]['pos_z']
+            '''
+                Ignored the normal vectors for now since the quality of the obtained point cloud
+                on hardware didn't seem to depend on it; will add it in if we discover that it matters in simulation
+            '''
+            self.robot.move(PyKDL.Vector(point_x, point_y, point_z))
+
         return 
 
     # Exp: Plan the order of the points to be visited and reordered self.data
     def visit_plan(self):
+        '''
+            If we assign IDs to points in the same raster-scan order, this function is not necessary
+        '''
         # Input: 1) self.data
         # Output: 1) ordered self.data
         # TODO
