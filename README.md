@@ -76,7 +76,8 @@ After launching Rviz, add in the following two rostopics to visualize the result
 2. Edit "/config/blaser_SIMULATED.json" line:47(mesh_resource) to the new .stl file path.
 3. Run blaser_sim.py .
 
-## How to get 3D point cloud of the stl file with simulated arm scanning
-1. Run "python Modeling/pc_sticher.py" to start listener
-2. Run any robot control script under the dvrkPlanner folder
+## How to get 3D point cloud of the stl file with simulated arm scanning (blaser stitching)
+1. Run "python Modeling/pc_sticher.py" to start listener.
+2. Add the "Pointcloud2" topic by the name "organ_3d_point_cloud".
+3. Run any robot control script under the dvrkPlanner folder.
 
