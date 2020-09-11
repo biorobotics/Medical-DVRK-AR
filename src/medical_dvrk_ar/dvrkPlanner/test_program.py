@@ -38,7 +38,7 @@ def main():
 		robot.dmove(PyKDL.Vector(0, 0.05, -0.05))
 		rate.sleep()
 	while not rospy.is_shutdown():
-		print("Running")
+		#print("Running")
 		rate.sleep()
 
 

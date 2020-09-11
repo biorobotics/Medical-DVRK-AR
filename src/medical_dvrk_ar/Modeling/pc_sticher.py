@@ -44,7 +44,7 @@ class stiching_3d_pc:
 	def blaser_listener(self):
 		"""This listener listen to 'pointcloud2 msg' from the topic 'blaser_pc' (orginally published by blaser_sim node), 
 		and send the pointcloud2 to callback_stiching for data processing"""
-		rospy.Subscriber("blaser_pc", PointCloud2, self.callback_stiching)
+		rospy.Subscriber("blaser", PointCloud2, self.callback_stiching)
 		rospy.spin() 
 
 	def callback_stiching(self, data):
