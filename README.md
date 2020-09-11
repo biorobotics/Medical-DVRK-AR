@@ -77,6 +77,6 @@ After launching Rviz, add in the following two rostopics to visualize the result
 3. Run blaser_sim.py .
 
 ## How to get 3D point cloud of the stl file with simulated arm scanning
-1. Run "python Modelling/pc_sticher.py" to start listener
+1. Run "python Modeling/pc_sticher.py" to start listener
 2. Run any robot control script under the dvrkPlanner folder
 
