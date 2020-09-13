@@ -86,4 +86,5 @@ After launching Rviz, add in the following two rostopics to visualize the result
 1. in the "data" folder in github, download "downPCL.npy" in the same folder with the python code in 2.
 2. Run "python Modeling/liverGrid.py"
 3. Add the "Pointcloud2" topic by the name "liverGrid".
-4. See more parameter in the python file
+4. Check the folder of the python code, 'disorder_liverGrid.npy' should be generated
+5. See more parameter in the python file
