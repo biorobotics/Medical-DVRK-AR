@@ -81,3 +81,8 @@ After launching Rviz, add in the following two rostopics to visualize the result
 2. Add the "Pointcloud2" topic by the name "organ_3d_point_cloud".
 3. Run any robot control script under the dvrkPlanner folder.
 
+
+## How to get key points for path planning
+1. Run "python Modeling/liverGrid.py"
+2. Add the "Pointcloud2" topic by the name "liverGrid".
+3. See more parameter in the python file
