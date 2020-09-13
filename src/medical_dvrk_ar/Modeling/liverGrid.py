@@ -46,7 +46,6 @@ class liverGrid:
 
     def publish_pointcloud(self):
         while not rospy.is_shutdown():
-            rospy.loginfo("pushlishing liver grid")
             self.pc2.header.stamp = rospy.Time.now()
             self.pub.publish(self.pc2)
             self.rate.sleep()
@@ -96,6 +95,8 @@ class liverGrid:
         
         self.point_nparray = np.dot(rotationMatrix, self.point_nparray).T
         self.point_nparray = self.point_nparray[:, 0:3]
+        np.save('disorder_liverGrid.npy', self.point_nparray)
+        print(np.load('disorder_liverGrid.npy'))
     
 
         # self.point_nparray = np.dot(getRotationMatrix(rotateAxis,rotateDegree), )
