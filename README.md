@@ -83,6 +83,7 @@ After launching Rviz, add in the following two rostopics to visualize the result
 
 
 ## How to get key points for path planning
-1. Run "python Modeling/liverGrid.py"
-2. Add the "Pointcloud2" topic by the name "liverGrid".
-3. See more parameter in the python file
+1. in the "data" folder in github, download "downPCL.npy" in the same folder with the python code in 2.
+2. Run "python Modeling/liverGrid.py"
+3. Add the "Pointcloud2" topic by the name "liverGrid".
+4. See more parameter in the python file
