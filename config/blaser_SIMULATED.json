@@ -1,10 +1,10 @@
 {
     "robot_topic": "/dvrk/PSM1/position_cartesian_current",
     "robot_base_frame": "PSM1_psm_base_link",
-    "blaser_range":0.1,
-    "blaser_nrays":100,
+    "blaser_range":0.08,
+    "blaser_nrays":50,
     "blaser_noise":0.0005,
-    "blaser_view_angle":70,
+    "blaser_view_angle":50,
     "objects":
     [
         {
@@ -33,7 +33,7 @@
                 {
                     "x":0,
                     "y":0,
-                    "z":-0.25
+                    "z":-0.20
                 },
                 "orientation":
                 {
@@ -41,6 +41,7 @@
                  "y":0,
                  "z":0,
                  "w":1
+
                 }
             },
             "type": 10,
