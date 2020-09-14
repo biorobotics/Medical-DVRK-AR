@@ -166,8 +166,10 @@ class BlaserSim(object):
             ends.append([start[0] + vec.x() * self.blaser_range,
                          start[1] + vec.y() * self.blaser_range,
                          start[2] + vec.z() * self.blaser_range])
-        # print(len(ends))
+        # self.colliders = []
+        # self.colliders.append(make_obb(file_path, pos, rot, scale))
         collisions, colors = self.collide(start, ends)
+        # self.colliders = []
         # print(len(collisions))
         points = [[v[0] + n[0], v[1] + n[1], v[2] + n[2], c] for v, n, c in zip(collisions, noise, colors)]
         # Create pointcloud message
