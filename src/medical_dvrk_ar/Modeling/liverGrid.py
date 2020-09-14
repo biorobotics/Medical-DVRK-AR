@@ -1,10 +1,12 @@
 #system
 import rospy
+import os
 
 #data processing
 import numpy as np
 import math
 import struct
+from scipy.spatial.transform import Rotation as R
 
 # point cloud
 from sensor_msgs.msg import PointCloud2, PointField
@@ -91,18 +93,25 @@ class liverGrid:
         self.point_nparray = np.transpose(self.point_nparray) # 3 by N matrix
         homo = np.ones((1, self.point_nparray.shape[1]))
         self.point_nparray = np.vstack((self.point_nparray, homo))
-        rotationMatrix = self.getRotationMatrix(rotateAxis, rotateDegree)
-        
-        self.point_nparray = np.dot(rotationMatrix, self.point_nparray).T
+        #rotationMatrix = self.getRotationMatrix(rotateAxis, rotateDegree)
+        rotational_matrix = R.from_euler(rotateAxis, rotateDegree, degrees= True).as_dcm()
+        rotational_matrix = np.vstack((rotational_matrix, [0, 0, 1]))
+        rotational_matrix = np.hstack((rotational_matrix,np.array([0, 0, 0, 1]).reshape(4,1)))
+        self.point_nparray = np.dot(rotational_matrix, self.point_nparray).T
         self.point_nparray = self.point_nparray[:, 0:3]
         np.save('disorder_liverGrid.npy', self.point_nparray)
-        print(np.load('disorder_liverGrid.npy'))
-    
-
+        #print(np.load('disorder_liverGrid.npy'))
         # self.point_nparray = np.dot(getRotationMatrix(rotateAxis,rotateDegree), )
-
+def read_npy_file():
+    modeling_directory = os.getcwd()
+    medical_dvrk_ar_directory = os.path.split(modeling_directory)[0]
+    src_directory = os.path.split(medical_dvrk_ar_directory)[0]
+    Medical_ws = os.path.split(src_directory)[0]
+    file_path = os.path.join(Medical_ws,"data/downPCL.npy")
+    return file_path
 if __name__ == '__main__':
     liver_grid = liverGrid()
-    liver_grid.readArrayfromFile('downPCL.npy', scale=0.0005, rotateAxis='x', rotateDegree=270)
-    liver_grid.convert_array_to_pointcloud2(xshift=0, yshift=0, zshift=-0.25)
+    npy_file = read_npy_file()
+    liver_grid.readArrayfromFile(npy_file, scale=0.0005, rotateAxis='x', rotateDegree=-90)
+    liver_grid.convert_array_to_pointcloud2(xshift=0, yshift=0, zshift=-0.18)
     liver_grid.publish_pointcloud()
