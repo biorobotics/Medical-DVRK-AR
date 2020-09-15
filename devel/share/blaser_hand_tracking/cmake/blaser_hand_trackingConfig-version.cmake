@@ -1,0 +1,1 @@
+/home/arti/Medical-DVRK-AR/devel/.private/blaser_hand_tracking/share/blaser_hand_tracking/cmake/blaser_hand_trackingConfig-version.cmake

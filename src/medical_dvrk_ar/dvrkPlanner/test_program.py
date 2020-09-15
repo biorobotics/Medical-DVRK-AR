@@ -22,16 +22,7 @@ def main():
 										   PyKDL.Vector(0, 0,-1)), 
 							PyKDL.Vector(-0.05,0,-0.10))
 	robot.move(safe_pos)
-	positions = [1,2,3,4]
-	# step_val_x = 0.003 #scan in increments of 3mm
-	# step_val_y = 0.006
-	# dir = 1
-
-	# for i in range(5):
-	# 	for j in range(10):
-	# 		robot.dmove(PyKDL.Vector(step_val_x * dir, 0, 0))
-	# 	robot.dmove(PyKDL.Vector(0, step_val_y, 0))
-	# 	dir *= -1
+	positions = [1,2,3,4]	
 
 	for pos in positions:
 		robot.move(safe_pos)

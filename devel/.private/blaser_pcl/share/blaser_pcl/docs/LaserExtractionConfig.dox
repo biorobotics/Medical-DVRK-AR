@@ -1,0 +1,22 @@
+\subsubsection parameters ROS parameters
+
+Reads and maintains the following parameters on the ROS server
+
+- \b "~simplecb_percent" : \b [double] Color balance percent min: 0.01, default: 1.0, max: 10.0
+- \b "~simplecb_enabled" : \b [bool] Enable color balance min: False, default: False, max: True
+- \b "~RMask_1_Lo_H" : \b [int] Red laser line mask 1 Lo H min: 0, default: 92, max: 180
+- \b "~RMask_1_Lo_S" : \b [int] Red laser line mask 1 Lo S min: 0, default: 14, max: 255
+- \b "~RMask_1_Lo_V" : \b [int] Red laser line mask 1 Lo V min: 0, default: 0, max: 255
+- \b "~RMask_1_Hi_H" : \b [int] Red laser line mask 1 Hi H min: 0, default: 180, max: 180
+- \b "~RMask_1_Hi_S" : \b [int] Red laser line mask 1 Hi S min: 0, default: 255, max: 255
+- \b "~RMask_1_Hi_V" : \b [int] Red laser line mask 1 Hi V min: 0, default: 255, max: 255
+- \b "~RMask_2_Lo_H" : \b [int] Red laser line mask 2 Lo H min: 0, default: 0, max: 180
+- \b "~RMask_2_Lo_S" : \b [int] Red laser line mask 2 Lo S min: 0, default: 100, max: 255
+- \b "~RMask_2_Lo_V" : \b [int] Red laser line mask 2 Lo V min: 0, default: 150, max: 255
+- \b "~RMask_2_Hi_H" : \b [int] Red laser line mask 2 Hi H min: 0, default: 43, max: 180
+- \b "~RMask_2_Hi_S" : \b [int] Red laser line mask 2 Hi S min: 0, default: 191, max: 255
+- \b "~RMask_2_Hi_V" : \b [int] Red laser line mask 2 Hi V min: 0, default: 202, max: 255
+- \b "~outlier_removel" : \b [bool] Enable outlier removal min: False, default: True, max: True
+- \b "~roi_r_percent" : \b [double] ROI row top cap min: 0.0, default: 0.078125, max: 0.99
+- \b "~roi_c_percent" : \b [double] ROI col side cap (R/L) min: 0.0, default: 0.015625, max: 0.5
+
