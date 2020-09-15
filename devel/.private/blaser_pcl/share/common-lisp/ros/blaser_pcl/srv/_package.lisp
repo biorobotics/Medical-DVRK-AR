@@ -1,0 +1,10 @@
+(cl:defpackage blaser_pcl-srv
+  (:use )
+  (:export
+   "VOXELGRIDSTITCH"
+   "<VOXELGRIDSTITCH-REQUEST>"
+   "VOXELGRIDSTITCH-REQUEST"
+   "<VOXELGRIDSTITCH-RESPONSE>"
+   "VOXELGRIDSTITCH-RESPONSE"
+  ))
+

@@ -1,0 +1,1 @@
+/home/arti/Medical-DVRK-AR/devel/.private/blaser_pcl/share/roseus/ros/blaser_pcl/manifest.l
