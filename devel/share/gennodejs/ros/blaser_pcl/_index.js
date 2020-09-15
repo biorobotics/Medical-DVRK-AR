@@ -1,1 +1,0 @@
-/home/arti/Medical-DVRK-AR/devel/.private/blaser_pcl/share/gennodejs/ros/blaser_pcl/_index.js

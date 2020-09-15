@@ -6,8 +6,7 @@ import os
 import numpy as np
 import math
 import struct
-# from scipy.spatial.transform import Rotation as R
-import scipy
+from scipy.spatial.transform import Rotation as R
 
 # point cloud
 from sensor_msgs.msg import PointCloud2, PointField
@@ -69,9 +68,9 @@ class liverGrid:
             [0,0,0,1]])
         rotationY = np.array([[np.cos(radius),0,np.sin(radius),0],
             [0,1,0,0],
-            [-np.sin(radius),0, np.cos(radius),0],
+            [-np.sin(radius),np.cos(radius),0],
             [0,0,0,1]])
-        rotationZ = np.array([[np.cos(radius),-np.sin(radius),0,0],
+        rotationZ = np.array([[np.cos(radius),np.sin(radius),0,0],
             [np.sin(radius),np.cos(radius),0,0],
             [0,0,1,0],
             [0,0,0,1]])
@@ -96,7 +95,6 @@ class liverGrid:
         self.point_nparray = np.vstack((self.point_nparray, homo))
         #rotationMatrix = self.getRotationMatrix(rotateAxis, rotateDegree)
         rotational_matrix = R.from_euler(rotateAxis, rotateDegree, degrees= True).as_dcm()
-        
         rotational_matrix = np.vstack((rotational_matrix, [0, 0, 1]))
         rotational_matrix = np.hstack((rotational_matrix,np.array([0, 0, 0, 1]).reshape(4,1)))
         self.point_nparray = np.dot(rotational_matrix, self.point_nparray).T
@@ -109,7 +107,7 @@ def read_npy_file():
     medical_dvrk_ar_directory = os.path.split(modeling_directory)[0]
     src_directory = os.path.split(medical_dvrk_ar_directory)[0]
     Medical_ws = os.path.split(src_directory)[0]
-    file_path = os.path.join(Medical_ws,"Medical-DVRK-AR/data/downPCL.npy")
+    file_path = os.path.join(Medical_ws,"data/downPCL.npy")
     return file_path
 if __name__ == '__main__':
     liver_grid = liverGrid()

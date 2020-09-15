@@ -1,6 +1,0 @@
-blaser-ros/blaser_hand_tracking
-/home/arti/Medical-DVRK-AR/devel/.private/blaser_hand_tracking/cmake.lock /home/arti/Medical-DVRK-AR/devel/./cmake.lock
-/home/arti/Medical-DVRK-AR/devel/.private/blaser_hand_tracking/share/blaser_hand_tracking/cmake/blaser_hand_trackingConfig-version.cmake /home/arti/Medical-DVRK-AR/devel/share/blaser_hand_tracking/cmake/blaser_hand_trackingConfig-version.cmake
-/home/arti/Medical-DVRK-AR/devel/.private/blaser_hand_tracking/share/blaser_hand_tracking/cmake/blaser_hand_trackingConfig.cmake /home/arti/Medical-DVRK-AR/devel/share/blaser_hand_tracking/cmake/blaser_hand_trackingConfig.cmake
-/home/arti/Medical-DVRK-AR/devel/.private/blaser_hand_tracking/lib/blaser_hand_tracking/blaser_hand_tracking_node /home/arti/Medical-DVRK-AR/devel/lib/blaser_hand_tracking/blaser_hand_tracking_node
-/home/arti/Medical-DVRK-AR/devel/.private/blaser_hand_tracking/lib/pkgconfig/blaser_hand_tracking.pc /home/arti/Medical-DVRK-AR/devel/lib/pkgconfig/blaser_hand_tracking.pc

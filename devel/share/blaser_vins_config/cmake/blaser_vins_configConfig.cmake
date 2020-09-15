@@ -1,1 +1,0 @@
-/home/arti/Medical-DVRK-AR/devel/.private/blaser_vins_config/share/blaser_vins_config/cmake/blaser_vins_configConfig.cmake

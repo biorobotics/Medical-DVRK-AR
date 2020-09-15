@@ -1,4 +1,0 @@
-[01m[K/home/arti/Medical-DVRK-AR/src/blaser-ros/blaser_pcl/src/pointcloud_saver.cpp:[m[K In member function ‘[01m[Kvoid HeightRecNode::cb(const PointCloud2&)[m[K’:
-[01m[K/home/arti/Medical-DVRK-AR/src/blaser-ros/blaser_pcl/src/pointcloud_saver.cpp:94:19:[m[K [01;35m[Kwarning: [m[Kformat ‘[01m[K%d[m[K’ expects argument of type ‘[01m[Kint[m[K’, but argument 11 has type ‘[01m[Kstd::size_t {aka long unsigned int}[m[K’ [-Wformat=]
-         pts.size());
-[01;32m[K                   ^[m[K
