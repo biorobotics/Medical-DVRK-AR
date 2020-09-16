@@ -83,7 +83,10 @@ After launching Rviz, add in the following two rostopics to visualize the result
 
 
 ## How to get key points for path planning
-1. Run "python Modeling/liverGrid.py"
-2. Add the "Pointcloud2" topic by the name "liverGrid".
-3. Check the folder of the python code, 'disorder_liverGrid.npy' should be generated
-4. See more parameter in the python file
+1. checkout normal_points branch
+2. prepare and 7*n matrix npy file, where [0:3,:] is the x y z position in robot base frame, [4:7,:] is the quaternion x y z w of the norm vector
+3. change '/home/cora/medicalRobot/src/Medical-DVRK-AR/Medical-DVRK-AR/data/liverGrid_norm.npy' to path to your npy file, you can use the liverGrid_norm.npy in the data folder
+4. in the code, apply translation if necessary >> liverGrid.convert_array_to_pointcloud2(xshift=0, yshift=0, zshift=-0.18)
+5. Add the "Pointcloud2" msg by the topic "liverGrid"
+6. Add the "PoseArray" msg by the topic "liverGridNorm"
+7. You should be able to see the Norm vector in red arrow, points in shpere shape, adjust the visualization in rviz
