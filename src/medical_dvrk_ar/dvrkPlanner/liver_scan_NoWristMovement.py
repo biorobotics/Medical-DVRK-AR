@@ -15,24 +15,21 @@ def main():
                            PyKDL.Vector(0.05,-0.04,-0.13))
     robot.move(safe_pos)
 
-    step_val_x = 0.004
-    step_val_y = 0.001
+    step_val_x = 0.02
+    step_val_y = 0.005
     step_val_z = 0.0001
     dir = 1
     z_dir = 1
 
-    for i in range(50):
-        for j in range(90):
+    for i in range(7):
+        for j in range(18):
             if j > 45:
                 z_dir = -1
             robot.dmove(PyKDL.Vector(0, step_val_y*dir, step_val_z*z_dir))
         robot.dmove(PyKDL.Vector(-step_val_x, 0, 0))
         dir *= -1
         z_dir = 1
-    while not rospy.is_shutdown():
-        print("Scan complete")
-        rate.sleep()
-
+    print("Scan complete")
 
 if __name__ == '__main__':
     main()
