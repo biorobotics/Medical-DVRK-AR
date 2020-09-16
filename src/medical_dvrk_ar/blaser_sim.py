@@ -122,7 +122,7 @@ class BlaserSim(object):
                          ob['pose']['orientation']['w'])
                 scale = (ob['scale']['x'], ob['scale']['y'], ob['scale']['z'])
                 self.colliders.append(make_obb(file_path, pos, rot, scale))
-    
+
     def collide(self, start_vec, end_vecs):
         intersection_vtk = vtk.vtkPoints()
         collisions = end_vecs
@@ -159,18 +159,16 @@ class BlaserSim(object):
         rand = np.random.randn(self.blaser_nrays) * self.blaser_noise
         for i in range(self.blaser_nrays):
             angle = (i - (self.blaser_nrays - 1)/2) / self.blaser_nrays * self.blaser_view_angle / 180 * np.pi
-            vec = PyKDL.Rotation().RotX(angle) * frame.M.UnitZ()
+            vec = PyKDL.Rotation().RotY(angle) * frame.M.UnitZ()
             noise.append([vec.x() * rand[i],
                           vec.y() * rand[i],
                           vec.z() * rand[i]])
             ends.append([start[0] + vec.x() * self.blaser_range,
                          start[1] + vec.y() * self.blaser_range,
                          start[2] + vec.z() * self.blaser_range])
-        # self.colliders = []
-        # self.colliders.append(make_obb(file_path, pos, rot, scale))
+
         collisions, colors = self.collide(start, ends)
-        # self.colliders = []
-        # print(len(collisions))
+
         points = [[v[0] + n[0], v[1] + n[1], v[2] + n[2], c] for v, n, c in zip(collisions, noise, colors)]
         # Create pointcloud message
         header = Header()
@@ -187,8 +185,6 @@ class BlaserSim(object):
         # Publish
         self.marker_pub.publish(self.marker_array)
         self.cloud_pub.publish(cloud_msg)
-
-
 
 
 if __name__ == '__main__':

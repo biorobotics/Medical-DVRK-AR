@@ -42,7 +42,7 @@ class stiching_3d_pc:
 		self.pub_3d_pc = rospy.Publisher("organ_3d_point_cloud", PointCloud2, queue_size=2)
 
 	def blaser_listener(self):
-		"""This listener listen to 'pointcloud2 msg' from the topic 'blaser_pc' (orginally published by blaser_sim node), 
+		"""This listener listen to 'pointcloud2 msg' from the topic 'blaser' (orginally published by blaser_sim node), 
 		and send the pointcloud2 to callback_stiching for data processing"""
 		rospy.Subscriber("blaser", PointCloud2, self.callback_stiching)
 		rospy.spin() 
@@ -62,13 +62,11 @@ class stiching_3d_pc:
 		return:
 		publish the stitched point cloud
 		"""
-
 		line = point_cloud2.read_points(data, field_names = ("x", "y", "z", "rgb"), skip_nans=True)
 
 		for i, p in enumerate(line):
 			if p[3] == np.uint32(0x00ff00):
 				self.cloud_points.append([p[0],p[1],p[2],np.uint32(0x0000ff)]) #blue for the entire point cloud
-				# # print (" x : %.4f  y: %.4f  z: %.4f" %(p[0],p[1],p[2]))
 
 		header = Header()
 		header.stamp = rospy.Time.now()
