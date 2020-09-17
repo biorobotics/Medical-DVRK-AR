@@ -73,7 +73,7 @@ class Task_Planner:
         '''
         while True:
             self.predicted_data = self.points_prediction()
-            cur_time = rospy.Time.now()
+            cur_time = rospy.Time.now().to_sec()
             end_time = cur_time + self.predict_period
             while (cur_time <= end_time):
                 #Visit points in the data 
@@ -117,21 +117,44 @@ class Task_Planner:
 
         return 
     # Exp: Predict the locations of given points in the future time  0 <= t <= self.time_frame.
-    def points_prediction(self):
+    def points_prediction(self,time_frame):
         # Input:    1) time_frame: prediction period
         # Output:   1) predicted_data(nested_dictionary): Predicated data within the time period 
         # TODO
 
         return predicted_data
+
+    # Exp: Retrieve the position of the point id in the future from the map
+    def retrieve_point(point_id, time_in_the_future):
+        # Input:    1) time_in_the_future: time in the future
+        #           2) point_id : which point to search
+        # Output:   1) point_pose: future point position 
+        # TODO
+
+        return point_pose
+
     # Exp: Predict the position of a certain point by estimating a reached time and search in the 
     #      predicted table to obtain the location
-    def estimated_point(self, cur_point, next_point)
+    def estimated_point(self, cur_point, next_point_id, current_time)
         # Input:    1) cur_point: current point
         #           2) next_point: which point to go next
         # Output:   1) estimated_point: estimated location (x,y,z,vx,vy,vz) of the next point 
-        # TODO
+        
+        t_guess = 1
+        threshold = 0.05
+        alph = 0.05
+        t_error = 1
+        robot_velocity = 1
+        current_time = rospy.Time().now().to_sec()
 
-        return estimated_point
+        while (t_error > threshold):
+            estimated_point = self.retrieve_point(next_point_id, current_time + t_guess)
+            dist = np.linalg.norm(estimated_point - cur_point)
+            t_actual = dist / robot_velocity
+            t_error = t_guess - t_actual
+            t_guess -= alph * t_error
+
+    return estimated_point
 
 
 
