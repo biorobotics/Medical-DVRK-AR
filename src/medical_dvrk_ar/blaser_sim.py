@@ -110,6 +110,7 @@ class BlaserSim(object):
             self.robot_frame = data['robot_base_frame']
             self.marker_array = MarkerArray()
             self.colliders = []
+            self.received_points = []
             for ob in data['objects']:
                 self.marker_array.markers.append(message_from_dict(Marker(), ob))
                 file_path = clean_resource_path(ob['mesh_resource'])
@@ -127,16 +128,23 @@ class BlaserSim(object):
         intersection_vtk = vtk.vtkPoints()
         collisions = end_vecs
         colors = [np.uint32(0xff0000) for vec in end_vecs]
+        total_points = 0
         for idx, end in enumerate(end_vecs):
             points_intersected = []
             for collider in self.colliders:
                 code = collider.IntersectWithLine(start_vec, end, intersection_vtk, None)
                 point_data = intersection_vtk.GetData()
                 n_points = point_data.GetNumberOfTuples()
+
                 for i in range(n_points):
                     point = point_data.GetTuple3(i)
                     points_intersected.append(point)
+                    self.received_points.append(np.array(point))
+                    total_points +=1
             if points_intersected:
+                #print('length', len(points_intersected))
+                
+                #print(np.array(point))
                 colors[idx] = np.uint32(0x00ff00)
                 min_dist = float('inf')
                 min_collision = collisions[idx]
@@ -145,7 +153,7 @@ class BlaserSim(object):
                     if dist < min_dist:
                         min_collision = pt
                 collisions[idx] = min_collision
-
+        #print(total_points)   
         return collisions, colors
 
     def pose_cb(self, msg):
@@ -154,6 +162,7 @@ class BlaserSim(object):
         # Get blaser vectors
         frame = posemath.fromMsg(msg.pose)
         start = [frame.p.x(), frame.p.y(), frame.p.z()]
+        #print('start points', start)
         ends = []
         noise = []
         rand = np.random.randn(self.blaser_nrays) * self.blaser_noise
@@ -166,13 +175,10 @@ class BlaserSim(object):
             ends.append([start[0] + vec.x() * self.blaser_range,
                          start[1] + vec.y() * self.blaser_range,
                          start[2] + vec.z() * self.blaser_range])
-        # self.colliders = []
-        # self.colliders.append(make_obb(file_path, pos, rot, scale))
+        #_,_ =self.collide(start, ends)
         collisions, colors = self.collide(start, ends)
-        # self.colliders = []
-        # print(len(collisions))
         points = [[v[0] + n[0], v[1] + n[1], v[2] + n[2], c] for v, n, c in zip(collisions, noise, colors)]
-        # Create pointcloud message
+        #Create pointcloud message
         header = Header()
         header.stamp = stamp
         header.frame_id = self.robot_frame
@@ -186,7 +192,10 @@ class BlaserSim(object):
             m.header.stamp = stamp
         # Publish
         self.marker_pub.publish(self.marker_array)
+
         self.cloud_pub.publish(cloud_msg)
+        
+        np.save('./blaser_results.npy', self.received_points)
 
 
 

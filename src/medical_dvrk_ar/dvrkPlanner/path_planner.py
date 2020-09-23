@@ -1,6 +1,7 @@
 #!/usr/bin/env python 
 import rospy
 from dvrk import psm
+import math
 import PyKDL
 import numpy as np
 from tf_conversions import posemath
@@ -32,7 +33,6 @@ Task_Planner Class (Object)
         
     - Outputs:
         1) Robot motions
-
 '''
 class Task_Planner:
     # Exp: Initiating a Task_Planner class based on the given inputs.
@@ -40,29 +40,33 @@ class Task_Planner:
         rospy.init_node('controller', anonymous=True)
 	    self.robot = psm('PSM1')
 	    self.rate = rospy.Rate(100) 
+        # self.robot_pose is used to store the robot pose
         self.robot_pose = self.robot.get_current_position()
+        # self.predict_period is the update period of the simulation
         self.predict_period = 100
-
+        # self.sim_start_time is the start time (ros time) of the simulation
+        self.sim_start_time = None
+        # self.freq is the estimated frequency of the liver
         self.freq = frequency
+        # self.amp is the estimated amplitude of liver
         self.amp = amplitude
+        # self.ori_data is the orginal data
         self.ori_data = data
-        self.estimated_data = {}
-        self.cur_point = 1
+        # self.ordered_data is the sorted data
+        self.ordered_data = None
+        # self.cur_point stores the current iteration id
+        self.cur_point = 0
+        # self.number_of_data is the total number of data points
         self.number_of_data = len(self.data)
-
 
     # Exp: The main code runner.
     def run(self):
+        # command the robot to home position
         self.robot.home()
-        # TODO: how to iterate through these points
-        ordered_points = self.visit_plan()
-        '''
-        Have the robot move to an initial position first.
-        Assign a frame at this initial position
-        This may not be necessary if we end up using normals for 3D-scanning; 
-        we hadn't used normals when we generated 3D point cloud on hardware
-        '''
-        
+        # call the function to sort the raw data
+        self.ordered_data = self.visit_plan()
+
+
         safe_pos = PyKDL.Frame( PyKDL.Rotation(PyKDL.Vector(0, 1, 0),
                                                PyKDL.Vector(1, 0, 0),
                                                PyKDL.Vector(0, 0,-1)), 
@@ -72,37 +76,43 @@ class Task_Planner:
             The While loop below is for the overall planner after incorporating motion compensation
         '''
         while True:
-            self.predicted_data = self.points_prediction()
+            # record the start time of the simulation
+            self.sim_start_time = rospy.Time.now().to_sec()
+            # self.predicted_data = self.points_prediction()
+            
+            # when cur_time < t < end_time the system will not update its freq and amp 
             cur_time = rospy.Time.now().to_sec()
             end_time = cur_time + self.predict_period
             while (cur_time <= end_time):
                 #Visit points in the data 
-                for point in range (self.cur_point + 1, self.number_of_data):
-                    estimated_pos = self.estimated_point(self.robot_pose, point)
-
-                    #move to next point
-                    # Assuming the next point is passed in as a dictionary
+                for point in range (self.cur_point, self.number_of_data):
+                    # update current robot pose
+                    self.robot_pose = self.robot.get_current_position()
+                    # update current time in ros time
+                    cur_time = rospy.Time.now().to_sec()
+                    # estimate the position of the next point in the future
+                    estimated_pos = self.estimated_point(self.robot_pose, self.cur_point + 1)
+                    # move to next point
                     estimated_point_vec = (estimated_point['pos_x'], estimated_point['pos_y'], estimated_point['pos_z'])
                     self.robot.move(PyKDL.Vector(estimated_point_vec))
-
-                    self.robot_pose = self.robot.get_current_position()
-                    cur_time = rospy.Time.now()
-                    self.cur_point = point
-                    if point == self.number_of_data:
+                    # update current point
+                    self.cur_point += 1
+                    # break if reach the end of the list
+                    if point >= self.number_of_data:
                         return
-        '''
-            For PR7, there liver is going to be static. So the robot just needs to go to each of the points
-            passed through the dictionary. The While loop below is to get a 3D point cloud of the static liver
-        '''
-        for key in data:
-            point_x = data[key]['pos_x']
-            point_y = data[key]['pos_y']
-            point_z = data[key]['pos_z']
-            '''
-                Ignored the normal vectors for now since the quality of the obtained point cloud
-                on hardware didn't seem to depend on it; will add it in if we discover that it matters in simulation
-            '''
-            self.robot.move(PyKDL.Vector(point_x, point_y, point_z))
+        # '''
+        #     For PR7, there liver is going to be static. So the robot just needs to go to each of the points
+        #     passed through the dictionary. The While loop below is to get a 3D point cloud of the static liver
+        # '''
+        # for key in data:
+        #     point_x = data[key]['pos_x']
+        #     point_y = data[key]['pos_y']
+        #     point_z = data[key]['pos_z']
+        #     '''
+        #         Ignored the normal vectors for now since the quality of the obtained point cloud
+        #         on hardware didn't seem to depend on it; will add it in if we discover that it matters in simulation
+        #     '''
+        #     self.robot.move(PyKDL.Vector(point_x, point_y, point_z))
 
         return 
 
@@ -117,39 +127,43 @@ class Task_Planner:
 
         return 
     # Exp: Predict the locations of given points in the future time  0 <= t <= self.time_frame.
-    def points_prediction(self,time_frame):
-        # Input:    1) time_frame: prediction period
-        # Output:   1) predicted_data(nested_dictionary): Predicated data within the time period 
-        # TODO
+    def points_estimation(self,next_point_id, time):
+        # Input:    1) next_point_id: the id of the next point to visit
+        #           2) time: future time instant
+        # Output:   1) predicted_pose(nested_dictionary): Predicated data within the time period 
 
-        return predicted_data
+        pose = self.ordered_data[next_point_id]
+        run_time = time - self.sim_start_time
+        pose[2] = pose[2] + self.amp * math.sin(self.freq * run_time)
 
-    # Exp: Retrieve the position of the point id in the future from the map
-    def retrieve_point(point_id, time_in_the_future):
-        # Input:    1) time_in_the_future: time in the future
-        #           2) point_id : which point to search
-        # Output:   1) point_pose: future point position 
-        # TODO
-
-        return point_pose
+        return predicted_pose
 
     # Exp: Predict the position of a certain point by estimating a reached time and search in the 
     #      predicted table to obtain the location
-    def estimated_point(self, cur_point, next_point_id, current_time)
+        self.estimated_point(self.robot_pose, self.cur_point + 1)
+    def estimated_point(self, cur_pose, next_point_id)
         # Input:    1) cur_point: current point
         #           2) next_point: which point to go next
         # Output:   1) estimated_point: estimated location (x,y,z,vx,vy,vz) of the next point 
         
+        # initial guess of the time to reach the next point
         t_guess = 1
+
         threshold = 0.05
+        # learning rate
         alph = 0.05
+        # initalized t_error
         t_error = 1
+        # dVRK moving speed
         robot_velocity = 1
+        # current time in ros time
         current_time = rospy.Time().now().to_sec()
+        # current robot pose
+        current_pose = self.robot.get_current_position()
 
         while (t_error > threshold):
-            estimated_point = self.retrieve_point(next_point_id, current_time + t_guess)
-            dist = np.linalg.norm(estimated_point - cur_point)
+            estimated_point = self.point_estimation(next_point_id, current_time + t_guess)
+            dist = np.linalg.norm(estimated_point - current_pose)
             t_actual = dist / robot_velocity
             t_error = t_guess - t_actual
             t_guess -= alph * t_error
