@@ -58,13 +58,15 @@ class Task_Planner:
         self.cur_point = 0
         # self.number_of_data is the total number of data points
         self.number_of_data = len(self.data)
+        # self.max_angle is the maximum normal angle of the point cloud  
+        self.max_angle = 60
 
     # Exp: The main code runner.
     def run(self):
         # command the robot to home position
         self.robot.home()
         # call the function to sort the raw data
-        self.ordered_data = self.visit_plan()
+        self.ordered_data = self.pointcloud_sort(self.pointcloud_filter(self.ori_data ,self.max_angle))
 
 
         safe_pos = PyKDL.Frame( PyKDL.Rotation(PyKDL.Vector(0, 1, 0),
@@ -114,18 +116,47 @@ class Task_Planner:
         #     '''
         #     self.robot.move(PyKDL.Vector(point_x, point_y, point_z))
 
-        return 
+        return
+    # Exp: Only filter out the points with normals within the max_angle cone of z positive direction
+    #      to ensure the robot arm can reach the point
+    def pointcloud_filter(self, pointcloud, max_angle):
+
+        pointcloud_reachable = []
+        for point in pointcloud:
+            # x,-z, y
+            angle = np.arccos(np.dot(point[3:],[0,-1,0]))
+            if angle <= max_angle * np.pi / 180:
+                pointcloud_reachable.append(point)
+        pointcloud_reachable = np.array(pointcloud_reachable)
+        self.number_of_data = pointcloud_reachable.shape[0]
+        print("Remaining points:",self.number_of_data)
+        return pointcloud_reachable
 
     # Exp: Plan the order of the points to be visited and reordered self.data
-    def visit_plan(self):
-        '''
-            If we assign IDs to points in the same raster-scan order, this function is not necessary
-        '''
-        # Input: 1) self.data
-        # Output: 1) ordered self.data
-        # TODO
+    def pointcloud_sort(self, pointcloud):
+        point_num = pointcloud.shape[0]
+        dtype = [('x',float),('y',float),('z',float),('normal_x',float),('normal_y',float),('normal_z',float)]
+        pointcloud = pointcloud.view(dtype)
+        pointcloud = pointcloud.reshape((point_num,))
+        pointcloud = np.sort(pointcloud, order=["x","y"])
+        pointcloud = np.array(pointcloud.tolist())
+        #to switch from zigzag to corner turn
+        line_startpoint_idx = []
+        for i in range(1,pointcloud.shape[0]-1):
+            last_dis = np.linalg.norm(pointcloud[i]-pointcloud[i-1])
+            next_dis = np.linalg.norm(pointcloud[i+1]-pointcloud[i])
+            if next_dis > 2 * last_dis: # if the moving distance to next point is too large, it's probably the end of the line
+                line_startpoint_idx.append(i+1)
+        
+        print("Line number:",len(line_startpoint_idx))
+        # reverse the order in a line
+        for i in range(len(line_startpoint_idx)-1):
+            pointcloud[line_startpoint_idx[i]:line_startpoint_idx[i+1]] = pointcloud[line_startpoint_idx[i]:line_startpoint_idx[i+1]][::-1]
 
-        return 
+        pointcloud[line_startpoint_idx[-1]:] = pointcloud[line_startpoint_idx[-1]:][::-1]
+        return pointcloud
+
+
     # Exp: Predict the locations of given points in the future time  0 <= t <= self.time_frame.
     def points_estimation(self,next_point_id, time):
         # Input:    1) next_point_id: the id of the next point to visit
@@ -173,13 +204,12 @@ class Task_Planner:
 
 
 if __name__=="__main__":
-    data = {
-            1: {'pos_x': 0.5, 'pos_y': 0.0, 'pos_z': 0.1, 'n_vx': 0, 'n_vy': 0, 'n_vz': 1},
-            2: {'pos_x': 0.6, 'pos_y': 0.2, 'pos_z': 0.1, 'n_vx': 0, 'n_vy': 0, 'n_vz': 1},
-            3: {'pos_x': 0.7, 'pos_y': 0.3, 'pos_z': 0.3, 'n_vx': 0, 'n_vy': 0, 'n_vz': 1},
-            4: {'pos_x': 0.8, 'pos_y': 0.3, 'pos_z': 0.4, 'n_vx': 0, 'n_vy': 0, 'n_vz': 1}
-            }
+    file_path = "/home/alex/MRSD_sim/src/Medical-DVRK-AR/data/" 
+    file_name = "liverGrid_dense_outward_normals.npy"
+    data = np.load(file_path + file_name)
     frequency = 0.5
     amplitude = 1
+    
     planner = Task_Planner(data, frequency, amplitude)
     planner.run()
+
