@@ -110,6 +110,9 @@ class BlaserSim(object):
             self.robot_frame = data['robot_base_frame']
             self.marker_array = MarkerArray()
             self.colliders = []
+            self.amp = 1
+            self.freq = 0.5
+            self.sim_start_time = rospy.Time.now().to_sec()
             self.received_points = []
             for ob in data['objects']:
                 self.marker_array.markers.append(message_from_dict(Marker(), ob))
@@ -161,6 +164,10 @@ class BlaserSim(object):
         stamp = rospy.Time.now()
         # Get blaser vectors
         frame = posemath.fromMsg(msg.pose)
+
+        run_time = stamp.to_sec() - self.sim_start_time
+        frame.p.z() += self.amp * math.sin(self.freq * run_time)
+ 
         start = [frame.p.x(), frame.p.y(), frame.p.z()]
         #print('start points', start)
         ends = []

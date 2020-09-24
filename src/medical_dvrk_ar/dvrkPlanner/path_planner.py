@@ -37,11 +37,11 @@ Task_Planner Class (Object)
 class Task_Planner:
     # Exp: Initiating a Task_Planner class based on the given inputs.
     def __init__(self, data = {}, frequency = 0.5, amplitude = 1):    
-        rospy.init_node('controller', anonymous=True)
-	    self.robot = psm('PSM1')
-	    self.rate = rospy.Rate(100) 
+        # rospy.init_node('controller', anonymous=True)
+        # self.robot = psm('PSM1')
+        # self.rate = rospy.Rate(100) 
         # self.robot_pose is used to store the robot pose
-        self.robot_pose = self.robot.get_current_position()
+        # self.robot_pose = self.robot.get_current_position()
         # self.predict_period is the update period of the simulation
         self.predict_period = 100
         # self.sim_start_time is the start time (ros time) of the simulation
@@ -57,16 +57,17 @@ class Task_Planner:
         # self.cur_point stores the current iteration id
         self.cur_point = 0
         # self.number_of_data is the total number of data points
-        self.number_of_data = len(self.data)
+        self.number_of_data = 0
         # self.max_angle is the maximum normal angle of the point cloud  
         self.max_angle = 60
 
+        self.ordered_data = self.pointcloud_sort(self.pointcloud_filter(self.ori_data ,self.max_angle))
     # Exp: The main code runner.
     def run(self):
         # command the robot to home position
         self.robot.home()
         # call the function to sort the raw data
-        self.ordered_data = self.pointcloud_sort(self.pointcloud_filter(self.ori_data ,self.max_angle))
+        
 
 
         safe_pos = PyKDL.Frame( PyKDL.Rotation(PyKDL.Vector(0, 1, 0),
@@ -122,6 +123,7 @@ class Task_Planner:
     def pointcloud_filter(self, pointcloud, max_angle):
 
         pointcloud_reachable = []
+        print("original points: ", len(pointcloud))
         for point in pointcloud:
             # x,-z, y
             angle = np.arccos(np.dot(point[3:],[0,-1,0]))
@@ -172,7 +174,7 @@ class Task_Planner:
     # Exp: Predict the position of a certain point by estimating a reached time and search in the 
     #      predicted table to obtain the location
         self.estimated_point(self.robot_pose, self.cur_point + 1)
-    def estimated_point(self, cur_pose, next_point_id)
+    def estimated_point(self, cur_pose, next_point_id):
         # Input:    1) cur_point: current point
         #           2) next_point: which point to go next
         # Output:   1) estimated_point: estimated location (x,y,z,vx,vy,vz) of the next point 
@@ -199,7 +201,7 @@ class Task_Planner:
             t_error = t_guess - t_actual
             t_guess -= alph * t_error
 
-    return estimated_point
+        return estimated_point
 
 
 
@@ -211,5 +213,5 @@ if __name__=="__main__":
     amplitude = 1
     
     planner = Task_Planner(data, frequency, amplitude)
-    planner.run()
+    # planner.run()
 
