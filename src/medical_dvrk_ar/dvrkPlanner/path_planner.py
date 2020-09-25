@@ -103,19 +103,6 @@ class Task_Planner:
                     # break if reach the end of the list
                     if point >= self.number_of_data:
                         return
-        # '''
-        #     For PR7, there liver is going to be static. So the robot just needs to go to each of the points
-        #     passed through the dictionary. The While loop below is to get a 3D point cloud of the static liver
-        # '''
-        # for key in data:
-        #     point_x = data[key]['pos_x']
-        #     point_y = data[key]['pos_y']
-        #     point_z = data[key]['pos_z']
-        #     '''
-        #         Ignored the normal vectors for now since the quality of the obtained point cloud
-        #         on hardware didn't seem to depend on it; will add it in if we discover that it matters in simulation
-        #     '''
-        #     self.robot.move(PyKDL.Vector(point_x, point_y, point_z))
 
         return
     # Exp: Only filter out the points with normals within the max_angle cone of z positive direction
