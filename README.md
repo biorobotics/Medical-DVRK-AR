@@ -86,3 +86,5 @@ After launching Rviz, add in the following two rostopics to visualize the result
 1. cd /your_file_path/src/Medical-DVRK-AR/src/medical_dvrk_ar/Modeling/
 2. python3 visualize_points_norm.py --path '../../../data/60degree_norm.npy'
 2. you can change '60degree_norm.npy' to '80degree_norm.npy' which contain more norm vectors
+![alt text](https://github.com/biorobotics/Medical-DVRK-AR/blob/master/data/position_vis.png)
+![alt text](https://github.com/biorobotics/Medical-DVRK-AR/blob/master/data/norm_vis.png)
