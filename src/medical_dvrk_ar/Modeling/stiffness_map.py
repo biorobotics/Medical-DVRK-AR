@@ -99,7 +99,7 @@ class stiffnessMap:
 		The function is to visualize in matplotlib. It is not necessary when published as a rostopic.
 		'''
 		self.color = np.where(self.stiffness == 1, 'r', 'g').tolist()
-		print('stiffness = ', np.sum(self.stiffness))
+		print('Number of points that are part of a tumor = ', np.sum(self.stiffness))
 		# Creating figure 
 		fig = plt.figure() 
 		ax = plt.axes(projection ="3d")
