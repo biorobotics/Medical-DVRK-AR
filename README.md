@@ -90,3 +90,9 @@ After launching Rviz, add in the following two rostopics to visualize the result
 5. In Rviz choose ADD > ADD by topic > the point cloud2 msg
 ![alt text](https://github.com/biorobotics/Medical-DVRK-AR/blob/master/data/position_vis.png)
 ![alt text](https://github.com/biorobotics/Medical-DVRK-AR/blob/master/data/norm_vis.png)
+
+## Create stiffness map 
+1. cd /your_file_path/src/Medical-DVRK-AR/src/medical_dvrk_ar/Modeling/
+2. python stiffness_map.py --path /path-to-local-repo/Medical-DVRK-AR/data/xyz_for_stiffness_est.npy --map_type b
+3. If you want a strictly binary stiffness map, it is "--map b". If you want create a normalized heat map, it is "--map h".
+4. The liver with tumors (red) should pop up in matplotlib
