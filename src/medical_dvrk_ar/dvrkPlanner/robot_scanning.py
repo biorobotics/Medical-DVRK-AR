@@ -94,7 +94,7 @@ def fingertipConstraint(vectorDesired):
                       [ v.z(),    0.0, -v.x()],
                       [-v.y(), v.x(),    0.0]])
     c = vector.z()
-    R = np.eye(3) + skew + skew*skew*(1-c)/(s*s);
+    R = np.eye(3) + skew + skew*skew*(1-c)/(s*s)
 
     kdlRotation = arrayToPyKDLRotation(R.tolist())
     z, y  = kdlRotation.GetEulerZYZ()[0:2]
@@ -109,10 +109,9 @@ def fingertipConstraint(vectorDesired):
 class ControlServer(object):
     def __init__(self, startp, endp):
 
-        self.organPoseSub = rospy.Subscriber('registration_pose',
-                                             PoseStamped, self.poseCb)
-        self.organTransform = None
-        self.robot = psm('PSM2')
+        # self.organPoseSub = rospy.Subscriber('registration_pose',PoseStamped, self.poseCb)
+        # self.organTransform = None
+        self.robot = psm('PSM1')
 
         self.toolOffset = .02 # distance from pinching axle to center of orange nub
 
@@ -143,16 +142,18 @@ class ControlServer(object):
         self.safeSpot = PyKDL.Frame()
         self.safeSpot.p = startp
         self.safeSpot.M = fingertipConstraint(startp)
+        print(self.safeSpot)
 
         self.scanEndSpot = PyKDL.Frame()
         self.scanEndSpot.p = endp
         self.scanEndSpot.M = fingertipConstraint(endp)
-        
+        print("start mobing")
         self.robot.move(self.safeSpot)
+        print("move to safe spot")
         self.resetZRot()
         self.rate.sleep()
         self.robot.move(self.scanEndSpot)
-
+        print("move to scan end spot")
 
     def poseCb(self, data):
         self.organTransform = posemath.fromMsg(data.pose)
@@ -202,8 +203,8 @@ class ControlServer(object):
         return displacements.tolist()
 
 if __name__=="__main__":
-    startp = PyKDL.Vector(0.06,0.00,-0.05)
-    endp = PyKDL.Vector(-0.06,0.00,-0.05)
+    startp = PyKDL.Vector(0.10,0.00,-0.0)
+    endp = PyKDL.Vector(0.00,0.00,-0.05)
     rospy.init_node('Control_server')
     np.set_printoptions(precision=2)
-    server = ControlServer()
+    server = ControlServer(startp, endp)
