@@ -48,7 +48,7 @@ class liverGrid:
         """
         for i in range(self.point_nparray.shape[0]):
             r = np.int(np.floor(self.point_nparray[i,3]*255))
-            gb=80-r if (r<80)else 0
+            gb=100-r if (r<100)else 0
             r = 50+r if(r<205)else r
             rgb = self.compressRGBA(r, gb, gb)
             self.point_cloud.append([self.point_nparray[i,0], self.point_nparray[i,1], self.point_nparray[i,2], rgb])
