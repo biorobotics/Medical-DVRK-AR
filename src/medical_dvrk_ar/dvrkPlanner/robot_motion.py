@@ -87,7 +87,7 @@ class ControlServer(object):
         self.maxForce = 800 # Not sure of this?
         self.safeZ = .05 # Safe height above organ in meters
         self.normalDistance = 0.005 # Meters
-        self.toolOffset = 0.02
+        self.toolOffset = 0.05
         self.amp = amplitude
         self.freq = frequency
 
