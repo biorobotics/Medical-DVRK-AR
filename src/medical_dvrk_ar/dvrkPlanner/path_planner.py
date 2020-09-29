@@ -107,9 +107,6 @@ class Task_Planner:
                 # print('point to go', next_point_estimated.p)
                 dest = make_PyKDL_Frame(self.data[itr])
                 self.server.move(dest, self.server.maxForce)
-
-                
-                # self.robot.move(next_point_estimated)
                 # update current point
                 print(self.cur_point)
                 self.cur_point += 1
