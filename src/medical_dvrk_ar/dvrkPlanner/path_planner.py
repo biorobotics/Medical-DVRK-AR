@@ -6,8 +6,8 @@ import PyKDL
 import numpy as np
 from tf_conversions import posemath
 import os.path
-from point_estimation import points_estimation, estimated_point
-from robot_motion import resolvedRates, make_PyKDL_Frame, ControlServer
+from point_estimation import estimation, make_PyKDL_Frame
+from robot_motion import resolvedRates, ControlServer
 
 '''
 Task_Planner Class (Object)
@@ -40,13 +40,8 @@ class Task_Planner:
     # Exp: Initiating a Task_Planner class based on the given inputs.
     def __init__(self, data = {}, frequency = 0.0, amplitude = 0):    
         rospy.init_node('path_planner', anonymous=True)
-        # self.robot = psm('PSM1')
-        # self.rate = rospy.Rate(100) 
-        # self.robot_pose is used to store the robot pose
-        # self.robot_pose = None
-        
         # self.server is the motion server for the robot
-        self.server = ControlServer()
+        self.server = ControlServer(amplitude,frequency)
         # self.predict_period is the update period of the simulation
         self.predict_period = 100
         # self.sim_start_time is the start time (ros time) of the simulation
@@ -70,9 +65,6 @@ class Task_Planner:
         # command the robot to home position
         self.server.robot.home()
 
-        # #robot velocity
-        # robot_velocity = 0.02
-
         # record the start time of the simulation
         self.sim_start_time = rospy.Time.now().to_sec()
         
@@ -89,9 +81,6 @@ class Task_Planner:
         #This should be from .get_current_position(), but here we are only testing the estimation function
         #so we will now fake these robot pose.
         self.robot_pose = self.server.robot.get_current_position()
-        print('initial robot pose')
-        print(self.robot_pose)
-
 
         while (cur_time <= end_time):
             #Visit points in the data 
