@@ -6,6 +6,8 @@ import numpy as np
 from tf_conversions import posemath
 
 import os.path
+from point_estimation import estimation, make_PyKDL_Frame
+
 functionPath = os.path.dirname(os.path.realpath(__file__))
 
 
@@ -56,15 +58,10 @@ def resolvedRates(config,currentPose,desiredPose):
     poseError.rot.Normalize() # normalize to have the ang vel direction
     desiredTwist.rot = poseError.rot*angVelMag
     return desiredTwist
-def make_PyKDL_Frame(point):
-    pykdl_point = PyKDL.Frame()
-    pykdl_point.p = PyKDL.Vector(point[0],point[1],point[2])
-    pykdl_point.M = PyKDL.Rotation.Quaternion(point[3],point[4],point[5],point[6])
-    return pykdl_point
-    
+
 
 class ControlServer(object):
-    def __init__(self):
+    def __init__(self, amplitude, frequency):
 
         self.robot = psm('PSM1')
 
@@ -91,23 +88,24 @@ class ControlServer(object):
         self.safeZ = .05 # Safe height above organ in meters
         self.normalDistance = 0.005 # Meters
         self.toolOffset = 0.02
+        self.amp = amplitude
+        self.freq = frequency
+
     def move(self,desiredPose, maxForce):
         # currentPose = self.robot.get_desired_position()
 
-        desiredPosition = desiredPose.p - desiredPose.M.UnitZ()*self.toolOffset
-        desiredPoseWithOffset = PyKDL.Frame(desiredPose.M, desiredPose.p)
+
         currentPose = self.robot.get_current_position()
-        # desiredPose_PyKDL = PyKDL.Frame(desiredPose.M, desiredPose.p)
         measuredPose_previous = self.robot.get_current_position()
         while not rospy.is_shutdown():
             # get current and desired robot pose (desired is the top of queue)
             # compute the desired twist "x_dot" from motion command
 
-            '''
-            TODO
-            Here desiredPose_PyKDL should be updated costantly
+            desiredPose = estimation(desiredPose, self.amp, self.freq, 0, rospy.Time.now().to_sec())
+            
+            desiredPosition = desiredPose.p - desiredPose.M.UnitZ()*self.toolOffset
+            desiredPoseWithOffset = PyKDL.Frame(desiredPose.M, desiredPosition)
 
-            '''
             xDotMotion = resolvedRates(self.resolvedRatesConfig,
                                        currentPose,
                                        desiredPoseWithOffset) # xDotMotion is type [PyKDL.Twist]
@@ -129,8 +127,11 @@ if __name__=="__main__":
     p2 = [0.01,0.02,-0.15, 0.7071068,0.7071068,0,0]
     p3 = [0.00,0.00,-0.2,0.7071068,0.7071068,0,0]
     data = np.vstack((p1,p2,p3))
-    server = ControlServer()
+    amplitude = 0
+    frequency = 0
+    server = ControlServer(amplitude, frequency)
     
+
     number_of_points = len(data)
     for itr in range(0, number_of_points):
         dest = make_PyKDL_Frame(data[itr])
