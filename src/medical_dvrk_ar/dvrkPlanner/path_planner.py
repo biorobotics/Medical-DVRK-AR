@@ -6,6 +6,8 @@ import PyKDL
 import numpy as np
 from tf_conversions import posemath
 import os.path
+from point_estimation import points_estimation, estimated_point
+from robot_motion import resolvedRates, make_PyKDL_Frame, ControlServer
 
 '''
 Task_Planner Class (Object)
@@ -36,12 +38,15 @@ Task_Planner Class (Object)
 '''
 class Task_Planner:
     # Exp: Initiating a Task_Planner class based on the given inputs.
-    def __init__(self, data = {}, frequency = 0.5, amplitude = 1):    
-        # rospy.init_node('controller', anonymous=True)
+    def __init__(self, data = {}, frequency = 0.0, amplitude = 0):    
+        rospy.init_node('path_planner', anonymous=True)
         # self.robot = psm('PSM1')
         # self.rate = rospy.Rate(100) 
         # self.robot_pose is used to store the robot pose
-        # self.robot_pose = self.robot.get_current_position()
+        # self.robot_pose = None
+        
+        # self.server is the motion server for the robot
+        self.server = ControlServer()
         # self.predict_period is the update period of the simulation
         self.predict_period = 100
         # self.sim_start_time is the start time (ros time) of the simulation
@@ -50,155 +55,80 @@ class Task_Planner:
         self.freq = frequency
         # self.amp is the estimated amplitude of liver
         self.amp = amplitude
-        # self.ori_data is the orginal data
-        self.ori_data = data
-        # self.ordered_data is the sorted data
-        self.ordered_data = None
+        # self.data is the filtered data 
+        self.data = data
         # self.cur_point stores the current iteration id
         self.cur_point = 0
         # self.number_of_data is the total number of data points
-        self.number_of_data = 0
-        # self.max_angle is the maximum normal angle of the point cloud  
-        self.max_angle = 60
+        self.number_of_data = data.shape[0]
+        print('number of data', self.number_of_data)
 
-        self.ordered_data = self.pointcloud_sort(self.pointcloud_filter(self.ori_data ,self.max_angle))
+
+
     # Exp: The main code runner.
     def run(self):
         # command the robot to home position
-        self.robot.home()
-        # call the function to sort the raw data
+        self.server.robot.home()
+
+        # #robot velocity
+        # robot_velocity = 0.02
+
+        # record the start time of the simulation
+        self.sim_start_time = rospy.Time.now().to_sec()
         
+        # when cur_time < t < end_time the system will not update its freq and amp 
+        cur_time = rospy.Time.now().to_sec()
+        end_time = cur_time + self.predict_period
+
+        self.cur_point = 0
+  
+        # print('number of points in the data',self.number_of_data)
+        # print('sim_start_time', self.sim_start_time)
+        # print('prediction period', end_time)
+
+        #This should be from .get_current_position(), but here we are only testing the estimation function
+        #so we will now fake these robot pose.
+        self.robot_pose = self.server.robot.get_current_position()
+        print('initial robot pose')
+        print(self.robot_pose)
 
 
-        safe_pos = PyKDL.Frame( PyKDL.Rotation(PyKDL.Vector(0, 1, 0),
-                                               PyKDL.Vector(1, 0, 0),
-                                               PyKDL.Vector(0, 0,-1)), 
-                                PyKDL.Vector(-0.05,0,-0.10))
-        self.robot.move(safe_pos)
-        '''
-            The While loop below is for the overall planner after incorporating motion compensation
-        '''
-        while True:
-            # record the start time of the simulation
-            self.sim_start_time = rospy.Time.now().to_sec()
-            # self.predicted_data = self.points_prediction()
-            
-            # when cur_time < t < end_time the system will not update its freq and amp 
-            cur_time = rospy.Time.now().to_sec()
-            end_time = cur_time + self.predict_period
-            while (cur_time <= end_time):
-                #Visit points in the data 
-                for point in range (self.cur_point, self.number_of_data):
-                    # update current robot pose
-                    self.robot_pose = self.robot.get_current_position()
-                    # update current time in ros time
-                    cur_time = rospy.Time.now().to_sec()
-                    # estimate the position of the next point in the future
-                    estimated_pos = self.estimated_point(self.robot_pose, self.cur_point + 1)
-                    # move to next point
-                    estimated_point_vec = (estimated_point['pos_x'], estimated_point['pos_y'], estimated_point['pos_z'])
-                    self.robot.move(PyKDL.Vector(estimated_point_vec))
-                    # update current point
-                    self.cur_point += 1
-                    # break if reach the end of the list
-                    if point >= self.number_of_data:
-                        return
+        while (cur_time <= end_time):
+            #Visit points in the data 
+            for itr in range (self.cur_point, self.number_of_data):
+            # for itr in range (0, 5):
+                # next point's data
+                # next_point = self.data[itr]
+                # update current time in ros time
+                # cur_time = rospy.Time.now().to_sec()
+                # estimate the position of the next point in the future
+                # next_point_estimated = estimated_point(next_point, self.amp, self.freq, self.sim_start_time, self.robot_pose, robot_velocity)        
+                # move to next point (here we simply assigned the robot_pose to next_point_pose)
+                # print('point to go', next_point_estimated.p)
+                dest = make_PyKDL_Frame(self.data[itr])
+                self.server.move(dest, self.server.maxForce)
 
-        return
-    # Exp: Only filter out the points with normals within the max_angle cone of z positive direction
-    #      to ensure the robot arm can reach the point
-    def pointcloud_filter(self, pointcloud, max_angle):
+                
+                # self.robot.move(next_point_estimated)
+                # update current point
+                print(self.cur_point)
+                self.cur_point += 1
+                
+                # break if reach the end of the list
+                if self.cur_point >= self.number_of_data:
+                    break
+            break
 
-        pointcloud_reachable = []
-        print("original points: ", len(pointcloud))
-        for point in pointcloud:
-            # x,-z, y
-            angle = np.arccos(np.dot(point[3:],[0,-1,0]))
-            if angle <= max_angle * np.pi / 180:
-                pointcloud_reachable.append(point)
-        pointcloud_reachable = np.array(pointcloud_reachable)
-        self.number_of_data = pointcloud_reachable.shape[0]
-        print("Remaining points:",self.number_of_data)
-        return pointcloud_reachable
-
-    # Exp: Plan the order of the points to be visited and reordered self.data
-    def pointcloud_sort(self, pointcloud):
-        point_num = pointcloud.shape[0]
-        dtype = [('x',float),('y',float),('z',float),('normal_x',float),('normal_y',float),('normal_z',float)]
-        pointcloud = pointcloud.view(dtype)
-        pointcloud = pointcloud.reshape((point_num,))
-        pointcloud = np.sort(pointcloud, order=["x","y"])
-        pointcloud = np.array(pointcloud.tolist())
-        #to switch from zigzag to corner turn
-        line_startpoint_idx = []
-        for i in range(1,pointcloud.shape[0]-1):
-            last_dis = np.linalg.norm(pointcloud[i]-pointcloud[i-1])
-            next_dis = np.linalg.norm(pointcloud[i+1]-pointcloud[i])
-            if next_dis > 2 * last_dis: # if the moving distance to next point is too large, it's probably the end of the line
-                line_startpoint_idx.append(i+1)
-        
-        print("Line number:",len(line_startpoint_idx))
-        # reverse the order in a line
-        for i in range(len(line_startpoint_idx)-1):
-            pointcloud[line_startpoint_idx[i]:line_startpoint_idx[i+1]] = pointcloud[line_startpoint_idx[i]:line_startpoint_idx[i+1]][::-1]
-
-        pointcloud[line_startpoint_idx[-1]:] = pointcloud[line_startpoint_idx[-1]:][::-1]
-        return pointcloud
-
-
-    # Exp: Predict the locations of given points in the future time  0 <= t <= self.time_frame.
-    def points_estimation(self,next_point_id, time):
-        # Input:    1) next_point_id: the id of the next point to visit
-        #           2) time: future time instant
-        # Output:   1) predicted_pose(nested_dictionary): Predicated data within the time period 
-
-        pose = self.ordered_data[next_point_id]
-        run_time = time - self.sim_start_time
-        pose[2] = pose[2] + self.amp * math.sin(self.freq * run_time)
-
-        return predicted_pose
-
-    # Exp: Predict the position of a certain point by estimating a reached time and search in the 
-    #      predicted table to obtain the location
-        self.estimated_point(self.robot_pose, self.cur_point + 1)
-    def estimated_point(self, cur_pose, next_point_id):
-        # Input:    1) cur_point: current point
-        #           2) next_point: which point to go next
-        # Output:   1) estimated_point: estimated location (x,y,z,vx,vy,vz) of the next point 
-        
-        # initial guess of the time to reach the next point
-        t_guess = 1
-
-        threshold = 0.05
-        # learning rate
-        alph = 0.05
-        # initalized t_error
-        t_error = 1
-        # dVRK moving speed
-        robot_velocity = 1
-        # current time in ros time
-        current_time = rospy.Time().now().to_sec()
-        # current robot pose
-        current_pose = self.robot.get_current_position()
-
-        while (t_error > threshold):
-            estimated_point = self.point_estimation(next_point_id, current_time + t_guess)
-            dist = np.linalg.norm(estimated_point - current_pose)
-            t_actual = dist / robot_velocity
-            t_error = t_guess - t_actual
-            t_guess -= alph * t_error
-
-        return estimated_point
 
 
 
 if __name__=="__main__":
     file_path = "/home/alex/MRSD_sim/src/Medical-DVRK-AR/data/" 
-    file_name = "liverGrid_dense_outward_normals.npy"
+    file_name = "60degree_norm.npy"
     data = np.load(file_path + file_name)
-    frequency = 0.5
-    amplitude = 1
+    frequency = 0
+    amplitude = 0
     
     planner = Task_Planner(data, frequency, amplitude)
-    # planner.run()
+    planner.run()
 
