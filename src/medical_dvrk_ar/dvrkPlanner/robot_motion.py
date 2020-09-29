@@ -90,11 +90,14 @@ class ControlServer(object):
         self.maxForce = 800 # Not sure of this?
         self.safeZ = .05 # Safe height above organ in meters
         self.normalDistance = 0.005 # Meters
-
+        self.toolOffset = 0.02
     def move(self,desiredPose, maxForce):
         # currentPose = self.robot.get_desired_position()
+
+        desiredPosition = desiredPose.p - desiredPose.M.UnitZ()*self.toolOffset
+        desiredPoseWithOffset = PyKDL.Frame(desiredPose.M, desiredPose.p)
         currentPose = self.robot.get_current_position()
-        desiredPose_PyKDL = PyKDL.Frame(desiredPose.M, desiredPose.p)
+        # desiredPose_PyKDL = PyKDL.Frame(desiredPose.M, desiredPose.p)
         measuredPose_previous = self.robot.get_current_position()
         while not rospy.is_shutdown():
             # get current and desired robot pose (desired is the top of queue)
@@ -107,7 +110,7 @@ class ControlServer(object):
             '''
             xDotMotion = resolvedRates(self.resolvedRatesConfig,
                                        currentPose,
-                                       desiredPose_PyKDL) # xDotMotion is type [PyKDL.Twist]
+                                       desiredPoseWithOffset) # xDotMotion is type [PyKDL.Twist]
             currentPose = PyKDL.addDelta(currentPose,xDotMotion,self.resolvedRatesConfig['dt'])
             
 
