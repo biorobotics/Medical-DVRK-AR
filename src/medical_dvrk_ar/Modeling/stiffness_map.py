@@ -19,12 +19,13 @@ class stiffnessMap:
 		self.tumorNormThresh: Any point with a normalized value greater than this is assigned stiffness value of 1 (Heat Map)
 		'''
 		self.which_map = which_map
-		self.tumorLoc1 = np.array([0.02, 0.02, 0.05])
-		self.tumorLoc2 = np.array([-0.04, 0.02, 0.04])
-		self.tumorLoc3 = np.array([-0.07, -0.04, 0.05])
+
 		self.tumorBinaryThresh = 0.012
 		self.tumorNormThresh = 0.009
 		self.point_nparray  = np.load(path) # N by 3 matrix
+		self.tumorLoc1 = self.point_nparray[100,:]+[0,0,0.001]
+		self.tumorLoc2 = self.point_nparray[450,:]+[0,0,0.002]
+		self.tumorLoc3 = self.point_nparray[900,:]+[0,0,0.003]
 		self.point_stiff = np.copy(self.point_nparray)
 
 		self.dist1 = np.zeros(self.point_nparray.shape[0])
@@ -44,10 +45,10 @@ class stiffnessMap:
 		Loop through each point and check euclidean distance of the point from the center of each tumor
 		'''
 		for i in range(self.point_nparray.shape[0]):
-			self.dist1[i] = np.linalg.norm(self.point_nparray[i][:2] - self.tumorLoc1[:2])
-			self.dist2[i] = np.linalg.norm(self.point_nparray[i][:2] - self.tumorLoc2[:2])
-			self.dist3[i] = np.linalg.norm(self.point_nparray[i][:2] - self.tumorLoc3[:2])
-
+			self.dist1[i] = np.linalg.norm(self.point_nparray[i][:3] - self.tumorLoc1[:3])
+			self.dist2[i] = np.linalg.norm(self.point_nparray[i][:3] - self.tumorLoc2[:3])
+			self.dist3[i] = np.linalg.norm(self.point_nparray[i][:3] - self.tumorLoc3[:3])
+			
 		# Decide which tumor the point is closest to (for heat map representation)
 		self.nearestTumorDist = np.minimum(np.minimum(self.dist1, self.dist2), self.dist3)
 
@@ -90,6 +91,7 @@ class stiffnessMap:
 		self.stiffNormalized = np.reshape(self.stiffNormalized, (self.point_nparray.shape[0], 1))		
 		self.stiffness = np.reshape(self.stiffness, (self.point_nparray.shape[0], 1))
 		self.point_stiff = np.append(self.point_stiff, self.stiffNormalized, axis = 1)
+		print(np.min(self.stiffNormalized))
 		self.point_stiff = np.append(self.point_stiff, self.stiffness, axis = 1)
 		np.save('../../../data/points_with_stiffness.npy', self.point_stiff)
 
@@ -116,8 +118,7 @@ class stiffnessMap:
 		if self.which_map == 'h':
 			self.heatMap()
 		self.appendStiffness()
-		self.visualizeStiffness()
-
+		# self.visualizeStiffness()
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description='To create stiffness map of liver')
@@ -127,6 +128,3 @@ if __name__ == "__main__":
 
 	stiffnessMap = stiffnessMap(args.path, args.map_type)
 	stiffnessMap.getStiffnessMap()
-
-
-
