@@ -166,7 +166,9 @@ class BlaserSim(object):
         frame = posemath.fromMsg(msg.pose)
 
         run_time = stamp.to_sec() - self.sim_start_time
-        frame.p.z() += self.amp * math.sin(self.freq * run_time)
+#         frame.p.z() += self.amp * math.sin(self.freq * run_time)
+        offset = PyKDL.Vector(0, 0, self.amp * math.sin(self.freq * run_time))
+        frame.p = frame.p + offset
  
         start = [frame.p.x(), frame.p.y(), frame.p.z()]
         #print('start points', start)
@@ -198,6 +200,9 @@ class BlaserSim(object):
         for m in self.marker_array.markers:
             m.header.stamp = stamp
         # Publish
+        marker_array = self.marker_array.copy()
+        for marker in marker.markers:
+            pass # Add offset
         self.marker_pub.publish(self.marker_array)
 
         self.cloud_pub.publish(cloud_msg)
