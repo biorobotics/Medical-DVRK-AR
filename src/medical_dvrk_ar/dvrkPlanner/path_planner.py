@@ -112,8 +112,8 @@ if __name__=="__main__":
     file_path = "/home/alex/MRSD_sim/src/Medical-DVRK-AR/data/" 
     file_name = "60degree_norm.npy"
     data = np.load(file_path + file_name)
-    frequency = 0
-    amplitude = 0
+    frequency = 0.05
+    amplitude = 0.5
     
     planner = Task_Planner(data, frequency, amplitude)
     planner.run()
