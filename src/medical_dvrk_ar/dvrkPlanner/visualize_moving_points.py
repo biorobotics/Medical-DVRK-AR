@@ -28,7 +28,7 @@ from scipy.spatial.transform import Rotation as R
 
 
 class sinWavePoints:
-    def __init__(self):
+    def __init__(self, amp, freq):
         #ros node
         rospy.init_node('sinWavePoints', anonymous=True)
 
@@ -43,8 +43,8 @@ class sinWavePoints:
         self.header.frame_id = "PSM1_psm_base_link" # the 3dpcl is in a new frame
         self.point_nparray = np.array([])
         self.start_time = rospy.get_rostime().to_sec()
-        self.amp = 0.05
-        self.freq = 0.5
+        self.amp = amp
+        self.freq = freq
         
 
     def convert_array_to_pointcloud2(self):
@@ -92,8 +92,10 @@ class sinWavePoints:
         return data
 
 if __name__ == "__main__":
-    mySinWave = sinWavePoints()
+    amplitude = 0.02
+    frequency = 0.5
+    mySinWave = sinWavePoints(amplitude, frequency)
 
     # pass any npy file start with [x,y,z,....]
-    mySinWave.readArrayfromFile('/home/alex/MRSD_sim/src/Medical-DVRK-AR/src/medical_dvrk_ar/dvrkPlanner/testdata.npy')
+    mySinWave.readArrayfromFile('/home/alex/MRSD_sim/src/Medical-DVRK-AR/data/60degree_norm.npy')
     mySinWave.publish_pointcloud()
