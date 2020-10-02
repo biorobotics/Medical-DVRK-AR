@@ -113,8 +113,8 @@ class BlaserSim(object):
             self.robot_frame = data['robot_base_frame']
             self.marker_array = MarkerArray()
             self.colliders = []
-            self.amp = 0.05
-            self.freq = 0.5
+            self.amp = 0.0
+            self.freq = 0.0
             self.sim_start_time = 0
             self.received_points = []
             self.old_move = 0
@@ -130,7 +130,7 @@ class BlaserSim(object):
                          ob['pose']['orientation']['w'])
                 scale = (ob['scale']['x'], ob['scale']['y'], ob['scale']['z'])
                 self.colliders.append(make_obb(file_path, pos, rot, scale))
-            # self.move_liver()
+            self.move_liver()
     
     def move_liver(self):
         rate = rospy.Rate(10)
@@ -217,17 +217,17 @@ class BlaserSim(object):
         self.cloud_pub.publish(cloud_msg)
 
         # uncomment this section if you want to see where the blaser is
-        # m = Marker()
-        # m.header.frame_id = self.robot_frame
-        # m.header.stamp = stamp
-        # m.pose.position.x = frame.p.x();
-        # m.pose.position.y = frame.p.y();
-        # m.pose.position.z = frame.p.z();
-        # m.scale.x = 0.01;
-        # m.scale.y = 0.01;
-        # m.scale.z = 0.01;
-        # m.color.a = 1.0;
-        # self.blaser_pub.publish(m)
+        m = Marker()
+        m.header.frame_id = self.robot_frame
+        m.header.stamp = stamp
+        m.pose.position.x = frame.p.x()
+        m.pose.position.y = frame.p.y()
+        m.pose.position.z = frame.p.z()
+        m.scale.x = 0.01
+        m.scale.y = 0.01
+        m.scale.z = 0.01
+        m.color.a = 1.0
+        self.blaser_pub.publish(m)
 
         
         # np.save('./blaser_results.npy', self.received_points)
