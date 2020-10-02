@@ -2,9 +2,9 @@
     "robot_topic": "/dvrk/PSM1/position_cartesian_current",
     "robot_base_frame": "PSM1_psm_base_link",
     "blaser_range":0.08,
-    "blaser_nrays":2,
-    "blaser_noise":0.000,
-    "blaser_view_angle":50,
+    "blaser_nrays":10,
+    "blaser_noise":0.001,
+    "blaser_view_angle":60,
     "objects":
     [
         {
