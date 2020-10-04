@@ -12,7 +12,9 @@ from tf_conversions import posemath
 import PyKDL
 import numpy as np
 from sensor_msgs import point_cloud2
-from std_msgs.msg import Header
+from std_msgs.msg import Header, Float64
+import math
+import copy
 
 def clean_resource_path(path):
     new_path = path
@@ -30,17 +32,17 @@ def clean_resource_path(path):
         if package_path == "":
             rospy.logfatal("%s Package [%s] does not exist",
                            path.c_str(),
-                           package.c_str());
+                           package.c_str())
             quit(1)
 
-        new_path = package_path + new_path;
+        new_path = package_path + new_path
     elif path.find("file://") == 0:
         new_path = new_path[len("file://"):]
 
     if not os.path.isfile(new_path):
         rospy.logfatal("%s file does not exist", new_path)
         quit(1)
-    return new_path;
+    return new_path
 
 def message_from_dict(message, dictionary):
     for key, value in dictionary.items():
@@ -87,7 +89,7 @@ def make_obb(stl_file, position=(0,0,0), orientation=(0,0,0,1), scale=(1,1,1)):
 
     obbTree = vtk.vtkOBBTree()
     obbTree.SetDataSet(mesh)
-    obbTree.SetTolerance(0.0001)
+    obbTree.SetTolerance(0.1)
     obbTree.BuildLocator()
 
     return obbTree
@@ -101,6 +103,7 @@ class BlaserSim(object):
             self.robot_sub = rospy.Subscriber(data['robot_topic'], PoseStamped, self.pose_cb)
             self.marker_pub = rospy.Publisher('collison_markers', MarkerArray, queue_size=1)
             self.cloud_pub = rospy.Publisher('blaser', PointCloud2, queue_size=1)
+            self.blaser_pub = rospy.Publisher('blaser_loc_test', Marker, queue_size=1)
             # Get blaser parameters
             self.blaser_range =      data['blaser_range']
             self.blaser_nrays =      data['blaser_nrays']
@@ -110,6 +113,11 @@ class BlaserSim(object):
             self.robot_frame = data['robot_base_frame']
             self.marker_array = MarkerArray()
             self.colliders = []
+            self.amp = 0.0
+            self.freq = 0.0
+            self.sim_start_time = 0
+            self.received_points = []
+            self.old_move = 0
             for ob in data['objects']:
                 self.marker_array.markers.append(message_from_dict(Marker(), ob))
                 file_path = clean_resource_path(ob['mesh_resource'])
@@ -123,20 +131,41 @@ class BlaserSim(object):
                 scale = (ob['scale']['x'], ob['scale']['y'], ob['scale']['z'])
                 self.colliders.append(make_obb(file_path, pos, rot, scale))
 
+            self.move_liver()
+    
+    def move_liver(self):
+        rate = rospy.Rate(10)
+        while not rospy.is_shutdown():
+            run_time = rospy.Time.now().to_sec()
+            offset_z = self.amp * math.sin(self.freq * run_time)
+            visualize_marker_array = copy.deepcopy(self.marker_array)
+            
+
+            for i in range(len(visualize_marker_array.markers)):
+                visualize_marker_array.markers[i].pose.position.z += offset_z
+
+            self.marker_pub.publish(visualize_marker_array)
+            rate.sleep()
+
+
     def collide(self, start_vec, end_vecs):
         intersection_vtk = vtk.vtkPoints()
         collisions = end_vecs
         colors = [np.uint32(0xff0000) for vec in end_vecs]
+        total_points = 0
         for idx, end in enumerate(end_vecs):
             points_intersected = []
             for collider in self.colliders:
                 code = collider.IntersectWithLine(start_vec, end, intersection_vtk, None)
                 point_data = intersection_vtk.GetData()
                 n_points = point_data.GetNumberOfTuples()
+
                 for i in range(n_points):
                     point = point_data.GetTuple3(i)
                     points_intersected.append(point)
-            if points_intersected:
+                    self.received_points.append(np.array(point))
+                    total_points +=1
+            if points_intersected:                
                 colors[idx] = np.uint32(0x00ff00)
                 min_dist = float('inf')
                 min_collision = collisions[idx]
@@ -145,7 +174,6 @@ class BlaserSim(object):
                     if dist < min_dist:
                         min_collision = pt
                 collisions[idx] = min_collision
-
         return collisions, colors
 
     def pose_cb(self, msg):
@@ -153,6 +181,12 @@ class BlaserSim(object):
         stamp = rospy.Time.now()
         # Get blaser vectors
         frame = posemath.fromMsg(msg.pose)
+        frameid = msg.header.frame_id
+        run_time = stamp.to_sec() - self.sim_start_time
+        offset_z = self.amp * math.sin(self.freq * run_time)
+        offset = PyKDL.Vector(0, 0, offset_z)
+        frame.p = frame.p - offset
+
         start = [frame.p.x(), frame.p.y(), frame.p.z()]
         ends = []
         noise = []
@@ -166,11 +200,18 @@ class BlaserSim(object):
             ends.append([start[0] + vec.x() * self.blaser_range,
                          start[1] + vec.y() * self.blaser_range,
                          start[2] + vec.z() * self.blaser_range])
+<<<<<<< HEAD
 
         collisions, colors = self.collide(start, ends)
 
+=======
+        
+        collisions, colors = self.collide(start, ends)
+>>>>>>> A_for_Alex_B_for_branch
         points = [[v[0] + n[0], v[1] + n[1], v[2] + n[2], c] for v, n, c in zip(collisions, noise, colors)]
-        # Create pointcloud message
+        
+        #Create pointcloud message
+        # this is the blaser collision
         header = Header()
         header.stamp = stamp
         header.frame_id = self.robot_frame
@@ -179,12 +220,24 @@ class BlaserSim(object):
                   PointField('z', 8, PointField.FLOAT32, 1),
                   PointField('rgb', 12, PointField.UINT32, 1)]
         cloud_msg = point_cloud2.create_cloud(header, fields, points)
-        # Update marker message stamp
-        for m in self.marker_array.markers:
-            m.header.stamp = stamp
-        # Publish
-        self.marker_pub.publish(self.marker_array)
+
         self.cloud_pub.publish(cloud_msg)
+
+        # uncomment this section if you want to see where the blaser is
+        m = Marker()
+        m.header.frame_id = self.robot_frame
+        m.header.stamp = stamp
+        m.pose.position.x = frame.p.x()
+        m.pose.position.y = frame.p.y()
+        m.pose.position.z = frame.p.z()
+        m.scale.x = 0.01
+        m.scale.y = 0.01
+        m.scale.z = 0.01
+        m.color.a = 1.0
+        self.blaser_pub.publish(m)
+
+        
+        # np.save('./blaser_results.npy', self.received_points)
 
 
 if __name__ == '__main__':
@@ -196,3 +249,4 @@ if __name__ == '__main__':
     blaser = BlaserSim(args.json_config)
 
     rospy.spin()
+

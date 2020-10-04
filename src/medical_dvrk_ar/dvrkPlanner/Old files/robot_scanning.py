@@ -94,7 +94,7 @@ def fingertipConstraint(vectorDesired):
                       [ v.z(),    0.0, -v.x()],
                       [-v.y(), v.x(),    0.0]])
     c = vector.z()
-    R = np.eye(3) + skew + skew*skew*(1-c)/(s*s);
+    R = np.eye(3) + skew + skew*skew*(1-c)/(s*s)
 
     kdlRotation = arrayToPyKDLRotation(R.tolist())
     z, y  = kdlRotation.GetEulerZYZ()[0:2]
@@ -109,10 +109,9 @@ def fingertipConstraint(vectorDesired):
 class ControlServer(object):
     def __init__(self, startp, endp):
 
-        self.organPoseSub = rospy.Subscriber('registration_pose',
-                                             PoseStamped, self.poseCb)
-        self.organTransform = None
-        self.robot = psm('PSM2')
+        # self.organPoseSub = rospy.Subscriber('registration_pose',PoseStamped, self.poseCb)
+        # self.organTransform = None
+        self.robot = psm('PSM1')
 
         self.toolOffset = .02 # distance from pinching axle to center of orange nub
 
@@ -142,44 +141,45 @@ class ControlServer(object):
 
         self.safeSpot = PyKDL.Frame()
         self.safeSpot.p = startp
-        self.safeSpot.M = fingertipConstraint(startp)
+        self.safeSpot.M = PyKDL.Rotation.Quaternion(0.7071068,0.7071068,0,0)
+        print('start point rotation: ')
+        print(self.safeSpot)
 
         self.scanEndSpot = PyKDL.Frame()
         self.scanEndSpot.p = endp
-        self.scanEndSpot.M = fingertipConstraint(endp)
-        
-        self.robot.move(self.safeSpot)
-        self.resetZRot()
+        self.scanEndSpot.M = PyKDL.Rotation.Quaternion(0.7071068,0.7071068,0,0)
+        print('end point rotation: ')
+        print(self.scanEndSpot)
+        self.move(self.safeSpot, self.maxForce)
+        # self.resetZRot()
         self.rate.sleep()
-        self.robot.move(self.scanEndSpot)
+        self.move(self.scanEndSpot,self.maxForce)
 
+    # def poseCb(self, data):
+    #     self.organTransform = posemath.fromMsg(data.pose)
 
-    def poseCb(self, data):
-        self.organTransform = posemath.fromMsg(data.pose)
-
-    def resetZRot(self):
-        curr = self.robot.get_current_joint_position()
-        self.robot.move_joint(np.array([curr[0],
-                                        curr[1],
-                                        curr[2],
-                                        0,
-                                        curr[4],
-                                        curr[5]]))
+    # def resetZRot(self):
+    #     curr = self.robot.get_current_joint_position()
+    #     self.robot.move_joint(np.array([curr[0],
+    #                                     curr[1],
+    #                                     curr[2],
+    #                                     0,
+    #                                     curr[4],
+    #                                     curr[5]]))
 
 
     def move(self,desiredPose, maxForce):
         currentPose = self.robot.get_desired_position()
-        currentPose.p = currentPose.p
-        displacements = np.array([0], float)
+        # displacements = np.array([0], float)
         # Remove z rotation
         angle = np.arccos(PyKDL.dot(desiredPose.M.UnitX(), currentPose.M.UnitX()))
         rot = PyKDL.Rotation.Rot(desiredPose.M.UnitZ(), angle)
 
         # Added offset representing tooltip
-        desiredPosition = desiredPose.p - desiredPose.M.UnitZ()*self.toolOffset
-        desiredPoseWithOffset = PyKDL.Frame(desiredPose.M, desiredPosition)
+        # desiredPosition = desiredPose.p - desiredPose.M.UnitZ()*self.toolOffset
+        desiredPoseWithOffset = PyKDL.Frame(desiredPose.M, desiredPose.p)
         measuredPose_previous = self.robot.get_current_position()
-        startForce = self.force[1]
+        # startForce = self.force[1]
         while not rospy.is_shutdown():
             # get current and desired robot pose (desired is the top of queue)
             # compute the desired twist "x_dot" from motion command
@@ -190,20 +190,28 @@ class ControlServer(object):
             
 
             if xDotMotion.vel.Norm() <= 0.001 and xDotMotion.rot.Norm() <= 0.1:
+                print('target pose: ')
+                print(currentPose)
                 break
-
+                
+            
             self.robot.move(currentPose, interpolate = False)
             self.rate.sleep()
-            measuredPose_current = self.robot.get_current_position()
-            currentDisplacement = measuredPose_current.p-measuredPose_previous.p
-            currentDisplacement = PyKDL.dot(currentDisplacement, desiredPose.M.UnitZ())
+            # measuredPose_current = self.robot.get_current_position()
+            # currentDisplacement = measuredPose_current.p-measuredPose_previous.p
+            # currentDisplacement = PyKDL.dot(currentDisplacement, desiredPose.M.UnitZ())
 
-            displacements = np.append(displacements, [currentDisplacement])
-        return displacements.tolist()
+            # displacements = np.append(displacements, [currentDisplacement])
+        # return displacements.tolist()
 
 if __name__=="__main__":
-    startp = PyKDL.Vector(0.06,0.00,-0.05)
-    endp = PyKDL.Vector(-0.06,0.00,-0.05)
+    startp = PyKDL.Vector(0.05,0.02,0.0)
+    endp = PyKDL.Vector(0.00,0.00,-0.05)
     rospy.init_node('Control_server')
     np.set_printoptions(precision=2)
-    server = ControlServer()
+    server = ControlServer(startp, endp)
+
+    # test = PyKDL.Vector(1,0,0)
+    # test_result = fingertipConstraint(test)
+    # print('input:  ', test)
+    # print('result: ',test_result)

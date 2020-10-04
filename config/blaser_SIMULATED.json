@@ -3,8 +3,8 @@
     "robot_base_frame": "PSM1_psm_base_link",
     "blaser_range":0.08,
     "blaser_nrays":10,
-    "blaser_noise":0.0005,
-    "blaser_view_angle":50,
+    "blaser_noise":0.001,
+    "blaser_view_angle":60,
     "objects":
     [
         {
@@ -33,7 +33,7 @@
                 {
                     "x":0,
                     "y":0,
-                    "z":-0.20
+                    "z":-0.2
                 },
                 "orientation":
                 {
