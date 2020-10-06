@@ -89,7 +89,7 @@ def make_obb(stl_file, position=(0,0,0), orientation=(0,0,0,1), scale=(1,1,1)):
 
     obbTree = vtk.vtkOBBTree()
     obbTree.SetDataSet(mesh)
-    obbTree.SetTolerance(0.1)
+    obbTree.SetTolerance(0.01)
     obbTree.BuildLocator()
 
     return obbTree
@@ -185,14 +185,13 @@ class BlaserSim(object):
         offset_z = self.amp * math.sin(self.freq * run_time)
         offset = PyKDL.Vector(0, 0, offset_z)
         frame.p = frame.p - offset
-
         start = [frame.p.x(), frame.p.y(), frame.p.z()]
         ends = []
         noise = []
         rand = np.random.randn(self.blaser_nrays) * self.blaser_noise
         for i in range(self.blaser_nrays):
             angle = (i - (self.blaser_nrays - 1)/2) / self.blaser_nrays * self.blaser_view_angle / 180 * np.pi
-            vec = PyKDL.Rotation().RotX(angle) * frame.M.UnitZ()
+            vec = PyKDL.Rotation().RotY(angle) * frame.M.UnitZ()
             noise.append([vec.x() * rand[i],
                           vec.y() * rand[i],
                           vec.z() * rand[i]])
@@ -230,7 +229,7 @@ class BlaserSim(object):
         self.blaser_pub.publish(m)
 
         
-        # np.save('./blaser_results.npy', self.received_points)
+        np.save('./blaser_results.npy', self.received_points)
 
 
 

@@ -109,7 +109,7 @@ class Task_Planner:
 
 
 if __name__=="__main__":
-    file_path = "/home/alex/MRSD_sim/src/Medical-DVRK-AR/data/" 
+    file_path = "/home/anjalipemmaraju/catkin_ws/src/Medical-DVRK-AR/data/" 
     file_name = "60degree_norm.npy"
     data = np.load(file_path + file_name)
     frequency = 0.5

@@ -12,4 +12,5 @@
 # How to Run
 1) Launch the DVRK simulation as described in the root folder Readme.
 2) Edit path file in path_planner.py line 112 to your data location.
+3) Edit amplitude and frequency. (amp = 0.02, freq= 0.5)
 3) $python path_planner.py
