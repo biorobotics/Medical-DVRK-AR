@@ -4,8 +4,9 @@ from dvrk import psm
 import PyKDL
 import numpy as np
 from tf_conversions import posemath
-
+from tf import TransformBroadcaster
 import os.path
+from scipy.spatial.transform import Rotation as R
 from point_estimation import estimation, make_PyKDL_Frame, estimation_numpy
 
 functionPath = os.path.dirname(os.path.realpath(__file__))
@@ -95,6 +96,9 @@ class ControlServer(object):
         # testing estimation
         self.start_time = rospy.Time.now().to_sec()
 
+        # self.publisher is a publisher that publishes coordinates and rotation to the blaser sim
+        self.pose_publisher = TransformBroadcaster()
+    
     def move(self,desiredPose, maxForce):
         # currentPose = self.robot.get_desired_position()
 
@@ -126,11 +130,18 @@ class ControlServer(object):
             xDotMotion = resolvedRates(self.resolvedRatesConfig,
                                        currentPose,
                                        desiredPoseWithOffset) # xDotMotion is type [PyKDL.Twist]
-            currentPose = PyKDL.addDelta(currentPose,xDotMotion,self.resolvedRatesConfig['dt'])
+            nextPose = PyKDL.addDelta(currentPose,xDotMotion,self.resolvedRatesConfig['dt'])
             
 
             if xDotMotion.vel.Norm() <= 0.001 and xDotMotion.rot.Norm() <= 0.1:
-                break               
+                translation = (currentPose.p[0],currentPose.p[1],currentPose.p[2])
+                rotation = currentPose.M.GetQuaternion()
+                # print('currentPose')
+                # print(currentPose.M)
+                # print('Rotation', currentPose.M.GetQuaternion())
+                self.pose_publisher.sendTransform(translation, rotation, rospy.Time.now(), 'EE_pose', 'PSM1_psm_base_link')
+                break              
+            currentPose = nextPose 
             self.robot.move(currentPose, interpolate = False)
             self.rate.sleep()
 
