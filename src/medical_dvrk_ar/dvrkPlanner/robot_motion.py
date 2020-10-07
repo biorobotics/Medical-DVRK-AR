@@ -144,7 +144,76 @@ class ControlServer(object):
             currentPose = nextPose 
             self.robot.move(currentPose, interpolate = False)
             self.rate.sleep()
+class ControlServer_palpation(object):
+    def __init__(self, amplitude, frequency):
 
+        self.robot = psm('PSM1')
+
+        rate = 1000.0
+        # TODO make these values not hard coded
+        self.rate = rospy.Rate(rate) # 1000hz
+
+        self.resolvedRatesConfig = \
+        {   'velMin': 2.0/1000,
+            'velMax': 30.0/1000,
+            'angVelMin': 1.0/180.0*3.14,
+            'angVelMax': 60.0/180.0*3.14,
+            'tolPos': 0.1/1000.0, # positional tolerance
+            'tolRot': 1.0/180.0*3.14, # rotational tolerance
+            'velRatio': 1, # the ratio of max velocity error radius to tolarance radius, this value >1
+            'rotRatio': 1,
+            'dt': 1.0/rate, # this is the time step of the system. 
+                            # if rate=1khz, then dt=1.0/1000. However, 
+                            # we don't know if the reality will be the same as desired rate
+        }
+
+        self.maxDepth = 0.01 # Meters
+        self.maxForce = 800 # Not sure of this?
+        self.safeZ = .05 # Safe height above organ in meters
+        self.normalDistance = 0.005 # Meters
+        self.toolOffset = 0.0
+        self.amp = amplitude
+        self.freq = frequency
+
+        # testing estimation
+        self.start_time = rospy.Time.now().to_sec()
+
+    
+    def move(self,desiredPose, maxForce):
+        # currentPose = self.robot.get_desired_position()
+
+        # print(desiredPose.p)
+        currentPose = self.robot.get_current_position()
+        measuredPose_previous = self.robot.get_current_position()
+
+
+        while not rospy.is_shutdown():
+            # get current and desired robot pose (desired is the top of queue)
+            # compute the desired twist "x_dot" from motion command
+            # print(desiredPose.p)
+            desiredPose_move = estimation(desiredPose, self.amp, self.freq, 0, rospy.Time.now().to_sec())
+            # print(desiredPose_move.p)
+
+            desiredPosition = desiredPose_move.p - desiredPose_move.M.UnitZ()*self.toolOffset
+            
+            desiredPoseWithOffset = PyKDL.Frame(desiredPose_move.M, desiredPosition)
+
+            xDotMotion = resolvedRates(self.resolvedRatesConfig,
+                                       currentPose,
+                                       desiredPoseWithOffset) # xDotMotion is type [PyKDL.Twist]
+            nextPose = PyKDL.addDelta(currentPose,xDotMotion,self.resolvedRatesConfig['dt'])
+            
+
+            if xDotMotion.vel.Norm() <= 0.001 and xDotMotion.rot.Norm() <= 0.1:
+                translation = (currentPose.p[0],currentPose.p[1],currentPose.p[2])
+                rotation = currentPose.M.GetQuaternion()
+                # append data to the data!!
+                # TODO
+                #
+                break              
+            currentPose = nextPose 
+            self.robot.move(currentPose, interpolate = False)
+            self.rate.sleep()
 if __name__=="__main__":
     rospy.init_node('Control_server')
 
