@@ -10,7 +10,7 @@ Output: a value of type double which is the heat-map stiffness value assigned to
 
 def calculate_stiffness(curr_point):
 	# load the numpy file containing liver points and ground truth stiffness value 
-	gt_stiffness = np.load('points_with_stiffness.npy')
+	gt_stiffness = np.load('/home/alex/MRSD_sim/src/Medical-DVRK-AR/data/points_with_stiffness.npy')
 	# the normalized stiffness values were appended to the fourth column of ground truth,
 	# so extract it as a separate array here
 	gt_heat_vals = gt_stiffness[:,3]

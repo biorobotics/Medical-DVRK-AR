@@ -3,11 +3,13 @@ import rospy
 from dvrk import psm
 import math
 import PyKDL
+
 import numpy as np
 from tf_conversions import posemath
 import os.path
-from point_estimation import estimation, make_PyKDL_Frame
-from robot_motion import resolvedRates, ControlServer
+from point_estimation import make_PyKDL_Frame
+from robot_motion import ControlServer_palpation
+from palpation_stiffness import calculate_stiffness
 
 '''
 Task_Planner Class (Object)
@@ -57,6 +59,9 @@ class Task_Planner_palpation:
         self.cur_point = 0
         # self.number_of_data is the total number of data points
         self.number_of_data = data.shape[0]
+        # self.output_nparray is the output file of the palpation
+        self.output_nparray = [] 
+
         print('number of data', self.number_of_data)
 
 
@@ -75,10 +80,6 @@ class Task_Planner_palpation:
 
         self.cur_point = 0
   
-        # print('number of points in the data',self.number_of_data)
-        # print('sim_start_time', self.sim_start_time)
-        # print('prediction period', end_time)
-
         #This should be from .get_current_position(), but here we are only testing the estimation function
         #so we will now fake these robot pose.
         self.robot_pose = self.server.robot.get_current_position()
@@ -86,23 +87,31 @@ class Task_Planner_palpation:
         while (cur_time <= end_time):
             #Visit points in the data 
             for itr in range (self.cur_point, self.number_of_data):
-            # for itr in range (0, 5):
-                # next point's data
-                # next_point = self.data[itr]
-                # update current time in ros time
-                # cur_time = rospy.Time.now().to_sec()
-                # estimate the position of the next point in the future
-                # next_point_estimated = estimated_point(next_point, self.amp, self.freq, self.sim_start_time, self.robot_pose, robot_velocity)        
-                # move to next point (here we simply assigned the robot_pose to next_point_pose)
-                # print('point to go', next_point_estimated.p)
+            # for itr in range (self.cur_point, 10):
                 dest = make_PyKDL_Frame(self.data[itr])
                 self.server.move(dest, self.server.maxForce)
                 # update current point
                 print(self.cur_point)
                 self.cur_point += 1
                 
+                # append current pose data
+                currentPose = self.server.robot.get_current_position() #PyKDLFrame
+                translation = (currentPose.p[0],currentPose.p[1],currentPose.p[2])
+                rotation = currentPose.M.GetQuaternion()
+                stiffness = calculate_stiffness(translation)
+                # print('stiffness: ', stiffness)
+                point_data = (translation[0],translation[1],translation[2], rotation[0],rotation[1],rotation[2],rotation[3], stiffness)
+                self.output_nparray.append(point_data)
+                
+                # update output file every N points
+                update_rate = 10
+                if itr % update_rate == 0:
+                    np.save('palpation_result.npy', np.array(self.output_nparray))
+                    print('file saved')
                 # break if reach the end of the list
                 if self.cur_point >= self.number_of_data:
+                    np.save('palpation_result.npy', np.array(self.output_nparray))
+                    print('file saved')
                     break
             break
 
@@ -112,7 +121,8 @@ class Task_Planner_palpation:
 if __name__=="__main__":
     # for path planner for palpation, it should read in the blaser_result.npy file
     file_path = "/home/alex/MRSD_sim/src/Medical-DVRK-AR/data/" 
-    file_name = "blaser_result.npy"
+    file_name = "60degree_norm.npy"
+    # file_name = "blaser_results.npy"
     data = np.load(file_path + file_name)
     frequency = 0.5
     amplitude = 0.02

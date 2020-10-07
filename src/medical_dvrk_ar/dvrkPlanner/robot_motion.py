@@ -205,12 +205,8 @@ class ControlServer_palpation(object):
             
 
             if xDotMotion.vel.Norm() <= 0.001 and xDotMotion.rot.Norm() <= 0.1:
-                translation = (currentPose.p[0],currentPose.p[1],currentPose.p[2])
-                rotation = currentPose.M.GetQuaternion()
-                # append data to the data!!
-                # TODO
-                #
-                break              
+                break    
+                      
             currentPose = nextPose 
             self.robot.move(currentPose, interpolate = False)
             self.rate.sleep()
