@@ -43,9 +43,6 @@ class liverGrid:
 
         self.normal_vectors = PoseArray()
         self.normal_vectors.header = self.header
-        
-        
-
 
 
     def convert_array_to_pointcloud2(self):

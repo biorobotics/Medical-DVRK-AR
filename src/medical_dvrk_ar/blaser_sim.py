@@ -89,7 +89,7 @@ def make_obb(stl_file, position=(0,0,0), orientation=(0,0,0,1), scale=(1,1,1)):
 
     obbTree = vtk.vtkOBBTree()
     obbTree.SetDataSet(mesh)
-    obbTree.SetTolerance(0.1)
+    obbTree.SetTolerance(0.01)
     obbTree.BuildLocator()
 
     return obbTree
@@ -200,14 +200,8 @@ class BlaserSim(object):
             ends.append([start[0] + vec.x() * self.blaser_range,
                          start[1] + vec.y() * self.blaser_range,
                          start[2] + vec.z() * self.blaser_range])
-<<<<<<< HEAD
 
         collisions, colors = self.collide(start, ends)
-
-=======
-        
-        collisions, colors = self.collide(start, ends)
->>>>>>> A_for_Alex_B_for_branch
         points = [[v[0] + n[0], v[1] + n[1], v[2] + n[2], c] for v, n, c in zip(collisions, noise, colors)]
         
         #Create pointcloud message
@@ -224,19 +218,18 @@ class BlaserSim(object):
         self.cloud_pub.publish(cloud_msg)
 
         # uncomment this section if you want to see where the blaser is
-        m = Marker()
-        m.header.frame_id = self.robot_frame
-        m.header.stamp = stamp
-        m.pose.position.x = frame.p.x()
-        m.pose.position.y = frame.p.y()
-        m.pose.position.z = frame.p.z()
-        m.scale.x = 0.01
-        m.scale.y = 0.01
-        m.scale.z = 0.01
-        m.color.a = 1.0
-        self.blaser_pub.publish(m)
+        # m = Marker()
+        # m.header.frame_id = self.robot_frame
+        # m.header.stamp = stamp
+        # m.pose.position.x = frame.p.x()
+        # m.pose.position.y = frame.p.y()
+        # m.pose.position.z = frame.p.z()
+        # m.scale.x = 0.01
+        # m.scale.y = 0.01
+        # m.scale.z = 0.01
+        # m.color.a = 1.0
+        # self.blaser_pub.publish(m)
 
-        
         # np.save('./blaser_results.npy', self.received_points)
 
 

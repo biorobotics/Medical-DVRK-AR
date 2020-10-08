@@ -109,6 +109,7 @@ def read_npy_file():
     Medical_ws = os.path.split(src_directory)[0]
     file_path = os.path.join(Medical_ws,"data/downPCL.npy")
     return file_path
+
 if __name__ == '__main__':
     liver_grid = liverGrid()
     npy_file = read_npy_file()
