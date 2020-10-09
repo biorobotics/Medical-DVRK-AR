@@ -5,6 +5,7 @@ import PyKDL
 import numpy as np
 from tf_conversions import posemath
 from tf import TransformBroadcaster
+from geometry_msgs.msg import PoseStamped
 import os.path
 from scipy.spatial.transform import Rotation as R
 from point_estimation import estimation, make_PyKDL_Frame, estimation_numpy
@@ -97,7 +98,7 @@ class ControlServer(object):
         self.start_time = rospy.Time.now().to_sec()
 
         # self.publisher is a publisher that publishes coordinates and rotation to the blaser sim
-        self.pose_publisher = TransformBroadcaster()
+        self.pose_publisher = rospy.Publisher('EE_pose', PoseStamped, queue_size = 5)
     
     def move(self,desiredPose, maxForce):
         # currentPose = self.robot.get_desired_position()
@@ -139,7 +140,20 @@ class ControlServer(object):
                 # print('currentPose')
                 # print(currentPose.M)
                 # print('Rotation', currentPose.M.GetQuaternion())
-                self.pose_publisher.sendTransform(translation, rotation, rospy.Time.now(), 'EE_pose', 'PSM1_psm_base_link')
+                msg = PoseStamped()
+                msg.header.stamp = rospy.Time.now()
+                msg.header.frame_id = "PSM1_psm_base_link"
+                
+                msg.pose.orientation.x = rotation[0]
+                msg.pose.orientation.y = rotation[1]
+                msg.pose.orientation.z = rotation[2]
+                msg.pose.orientation.w = rotation[3]
+                
+                msg.pose.position.x = translation[0]
+                msg.pose.position.y = translation[1]
+                msg.pose.position.z = translation[2]
+                self.pose_publisher.publish(msg) 
+
                 break              
             currentPose = nextPose 
             self.robot.move(currentPose, interpolate = False)
@@ -223,7 +237,7 @@ if __name__=="__main__":
     # data = np.vstack((p3,p4,p5,p6,p7,p8,p9))
     # np.save('testdata.npy',data)
     data = np.load('testdata.npy')
-    amplitude = 0.05 #0.05
+    amplitude = 0.02 #0.05
     frequency = 0.5 #0.1
     server = ControlServer(amplitude, frequency)
     # server.move(make_PyKDL_Frame(data[0]), server.maxForce)
