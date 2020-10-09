@@ -1,5 +1,5 @@
 {
-    "robot_topic": "/dvrk/PSM1/position_cartesian_current_throttle",
+    "robot_topic": "EE_pose",
     "robot_base_frame": "PSM1_psm_base_link",
     "blaser_range":0.08,
     "blaser_nrays":10,
