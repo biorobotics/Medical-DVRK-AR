@@ -43,7 +43,7 @@ def pointcloud_sort(input_path, result_path):
 	np.save(result_path, pointcloud)
 
 if __name__ == "__main__":
-    file_path = "/home/anjalipemmaraju/catkin_ws/src/Medical-DVRK-AR/data/"
+    file_path = "/home/alex/MRSD_sim/src/Medical-DVRK-AR/data/"
     file_name = "60degree_norm.npy"
     sorted_file_name = "sorted_liverGrid_norm.npy"
     pointcloud_sort(file_path+file_name, file_path+sorted_file_name)
