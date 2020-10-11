@@ -92,10 +92,10 @@ class sinWavePoints:
         return data
 
 if __name__ == "__main__":
-    amplitude = 0.02
-    frequency = 0.5
+    amplitude = 0.0
+    frequency = 0.0
     mySinWave = sinWavePoints(amplitude, frequency)
 
     # pass any npy file start with [x,y,z,....]
-    mySinWave.readArrayfromFile('/home/alex/MRSD_sim/src/Medical-DVRK-AR/data/60degree_norm.npy')
+    mySinWave.readArrayfromFile('/home/alex/MRSD_sim/src/Medical-DVRK-AR/data/sorted_liverGrid_norm.npy')
     mySinWave.publish_pointcloud()

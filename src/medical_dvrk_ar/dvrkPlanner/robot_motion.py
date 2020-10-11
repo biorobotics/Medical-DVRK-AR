@@ -237,8 +237,8 @@ if __name__=="__main__":
     # data = np.vstack((p3,p4,p5,p6,p7,p8,p9))
     # np.save('testdata.npy',data)
     data = np.load('testdata.npy')
-    amplitude = 0.02 #0.05
-    frequency = 0.5 #0.1
+    amplitude = 0.0 #0.02
+    frequency = 0.0 #0.5
     server = ControlServer(amplitude, frequency)
     # server.move(make_PyKDL_Frame(data[0]), server.maxForce)
 

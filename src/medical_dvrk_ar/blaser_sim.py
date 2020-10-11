@@ -113,8 +113,8 @@ class BlaserSim(object):
             self.robot_frame = data['robot_base_frame']
             self.marker_array = MarkerArray()
             self.colliders = []
-            self.amp = 0.02
-            self.freq = 0.5
+            self.amp = 0.0 #0.02
+            self.freq = 0.0 #0.5
             self.sim_start_time = 0
             self.received_points = []
             self.old_move = 0
