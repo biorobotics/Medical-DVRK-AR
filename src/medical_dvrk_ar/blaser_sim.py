@@ -210,6 +210,8 @@ class BlaserSim(object):
         
         collisions, colors = self.collide(start, ends)
         points = [[v[0] + n[0], v[1] + n[1], v[2] + n[2], c] for v, n, c in zip(collisions, noise, colors)]
+        
+        # for testing moving OBB tree
         # offset_col = self.add_offset_to_collisions(collisions, offset_z)
         # points = [[v[0] + n[0], v[1] + n[1], v[2] + n[2], c] for v, n, c in zip(offset_col, noise, colors)]
         
@@ -251,8 +253,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Simulated blaser output.')
     parser.add_argument('-j', '--json_config', type=str, help='json configuration file for scene', required=True)
     args = parser.parse_args()
-    amplitude = 0.0 #0.02
-    frequency = 0.0 #0.5
+    amplitude = 0.02 #0.02
+    frequency = 0.5 #0.5
     blaser = BlaserSim(args.json_config, amplitude, frequency)
 
     rospy.spin()

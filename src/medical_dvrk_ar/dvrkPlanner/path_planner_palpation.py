@@ -121,7 +121,7 @@ class Task_Planner_palpation:
 if __name__=="__main__":
     # for path planner for palpation, it should read in the blaser_result.npy file
     file_path = "/home/alex/MRSD_sim/src/Medical-DVRK-AR/data/" 
-    file_name = "60degree_norm.npy"
+    file_name = "sorted_liverGrid_norm.npy"
     # file_name = "blaser_results.npy"
     data = np.load(file_path + file_name)
     frequency = 0.5
