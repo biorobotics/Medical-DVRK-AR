@@ -95,7 +95,7 @@ def make_obb(stl_file, position=(0,0,0), orientation=(0,0,0,1), scale=(1,1,1)):
     return obbTree
 
 class BlaserSim(object):
-    def __init__(self, json_config):
+    def __init__(self, json_config, amplitude, frequency):
         print("Reading from json file %s" % json_config)
         with open(json_config, 'r') as json_file:
             data = json.load(json_file)
@@ -113,8 +113,8 @@ class BlaserSim(object):
             self.robot_frame = data['robot_base_frame']
             self.marker_array = MarkerArray()
             self.colliders = []
-            self.amp = 0.0 #0.02
-            self.freq = 0.0 #0.5
+            self.amp = amplitude
+            self.freq = frequency
             self.sim_start_time = 0
             self.received_points = []
             self.old_move = 0
@@ -175,6 +175,14 @@ class BlaserSim(object):
                 collisions[idx] = min_collision
         return collisions, colors
 
+    def add_offset_to_collisions(self, collisions, offset):
+        # input collisions are collision results with the OBB tree
+        # the offset value needs to be added in to mimic actual blaser 
+        offset_collision = []
+        for i in range(len(collisions)):
+            offset_collision.append((collisions[i][0],collisions[i][1], collisions[i][2] + offset))
+        return offset_collision
+
     def pose_cb(self, msg):
         # Get current time for synchronizing markers and pointclouds
         stamp = rospy.Time.now()
@@ -183,6 +191,7 @@ class BlaserSim(object):
         frameid = msg.header.frame_id
         run_time = stamp.to_sec() - self.sim_start_time
         offset_z = self.amp * math.sin(self.freq * run_time)
+        # print(offset_z)
         offset = PyKDL.Vector(0, 0, offset_z)
         frame.p = frame.p - offset
         start = [frame.p.x(), frame.p.y(), frame.p.z()]
@@ -201,6 +210,8 @@ class BlaserSim(object):
         
         collisions, colors = self.collide(start, ends)
         points = [[v[0] + n[0], v[1] + n[1], v[2] + n[2], c] for v, n, c in zip(collisions, noise, colors)]
+        # offset_col = self.add_offset_to_collisions(collisions, offset_z)
+        # points = [[v[0] + n[0], v[1] + n[1], v[2] + n[2], c] for v, n, c in zip(offset_col, noise, colors)]
         
         #Create pointcloud message
         # this is the blaser collision
@@ -216,17 +227,17 @@ class BlaserSim(object):
         self.cloud_pub.publish(cloud_msg)
 
         # uncomment this section if you want to see where the blaser is
-        m = Marker()
-        m.header.frame_id = self.robot_frame
-        m.header.stamp = stamp
-        m.pose.position.x = frame.p.x()
-        m.pose.position.y = frame.p.y()
-        m.pose.position.z = frame.p.z()
-        m.scale.x = 0.01
-        m.scale.y = 0.01
-        m.scale.z = 0.01
-        m.color.a = 1.0
-        self.blaser_pub.publish(m)
+        # m = Marker()
+        # m.header.frame_id = self.robot_frame
+        # m.header.stamp = stamp
+        # m.pose.position.x = frame.p.x()
+        # m.pose.position.y = frame.p.y()
+        # m.pose.position.z = frame.p.z()
+        # m.scale.x = 0.01
+        # m.scale.y = 0.01
+        # m.scale.z = 0.01
+        # m.color.a = 1.0
+        # self.blaser_pub.publish(m)
 
         
         np.save('./blaser_results.npy', self.received_points)
@@ -240,7 +251,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Simulated blaser output.')
     parser.add_argument('-j', '--json_config', type=str, help='json configuration file for scene', required=True)
     args = parser.parse_args()
-    blaser = BlaserSim(args.json_config)
+    amplitude = 0.0 #0.02
+    frequency = 0.0 #0.5
+    blaser = BlaserSim(args.json_config, amplitude, frequency)
 
     rospy.spin()
 

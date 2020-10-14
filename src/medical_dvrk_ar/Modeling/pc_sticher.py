@@ -80,6 +80,8 @@ class stiching_3d_pc:
 		stiched_cloud_msg = point_cloud2.create_cloud(header, fields, self.cloud_points) # create the 3dpcl for publish
 		self.pub_3d_pc.publish(stiched_cloud_msg)
 
+		# np.save('./blaser_results.npy', self.cloud_points)
+
 if __name__ == "__main__":
 	pcl_stitcher = stiching_3d_pc()
 	pcl_stitcher.blaser_listener()

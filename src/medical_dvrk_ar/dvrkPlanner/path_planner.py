@@ -113,8 +113,8 @@ if __name__=="__main__":
     file_path = "/home/alex/MRSD_sim/src/Medical-DVRK-AR/data/" 
     file_name = "sorted_liverGrid_norm.npy"
     data = np.load(file_path + file_name)
-    amplitude = 0.0 #0.02
-    frequency = 0.0 #0.5
+    amplitude = 0.02 #0.02
+    frequency = 0.5 #0.5
     
     
     planner = Task_Planner(data, frequency, amplitude)
