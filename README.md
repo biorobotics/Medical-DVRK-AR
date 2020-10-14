@@ -82,8 +82,42 @@ After launching Rviz, add in the following two rostopics to visualize the result
 3. Run any robot control script under the dvrkPlanner folder.
 
 
-## How to get key points for path planning
-1. Run "python Modeling/liverGrid.py"
-2. Add the "Pointcloud2" topic by the name "liverGrid".
-3. Check the folder of the python code, 'disorder_liverGrid.npy' should be generated
-4. See more parameter in the python file
+## Path planning key points visualization
+1. cd /your_file_path/src/Medical-DVRK-AR/src/medical_dvrk_ar/Modeling/
+2. python3 visualize_points_norm.py --path '../../../data/60degree_norm.npy'
+3. you can change '60degree_norm.npy' to '80degree_norm.npy' which contain more norm vectors
+4. In Rviz choose ADD > ADD by topic > the pose array msg
+5. In Rviz choose ADD > ADD by topic > the point cloud2 msg
+![alt text](https://github.com/biorobotics/Medical-DVRK-AR/blob/master/data/position_vis.png)
+![alt text](https://github.com/biorobotics/Medical-DVRK-AR/blob/master/data/norm_vis.png)
+
+## Create and visualize stiffness map 
+1. cd /your_file_path/src/Medical-DVRK-AR/src/medical_dvrk_ar/Modeling/
+2. python stiffness_map.py --path /path-to-local-repo/Medical-DVRK-AR/data/xyz_for_stiffness_est.npy --map_type b
+3. If you want a strictly binary stiffness map, it is "--map b". If you want create a normalized heat map, it is "--map h".
+4. The liver with tumors (red) should pop up in matplotlib
+5. check the genetrated file "points_with_stiffness.npy" in /Medical-DVRK-AR/data folder
+6. cd /your_file_path/src/Medical-DVRK-AR/src/medical_dvrk_ar/Modeling/
+7. python3 visualize_stiffness.py --path /path-to-local-repo/Medical-DVRK-AR/data/points_with_stiffness.npy
+8. In Rviz, add Pointcloud2 in liverStiffness topic, you should see a "grey blue" liver
+9. Change the "size" to 0.0005, you should see the "red" tumor
+
+## Downsample original dense point cloud data
+1. cd .../Modeling/
+2. modify file path to your file path of '60degree_norm.npy'.
+3. python pointcloud_sort.py.
+4. a 'sorted_liverGrid_norm.npy' file will be generated under /data/ folder.
+
+## Running Blaser Simulation
+1. cd .../dvrkPlanner/
+2. edit file path at line 113 to your file path of 'sorted_liverGrid_norm.npy'. This is the result .npy file after running '60degree_norm.npy' through a downsample filter(./Modeling/pointcloud_sort.py).
+3. edit amplitude and frequency at line 116, 117. Now it is set at amp = 0.02, freq = 0.5.
+4. python path_planner.py
+5. if you have the blaser simulation on, it would generate a 'blaser_result.npy'.
+
+## Running Palpation
+1. cd .../dvrkPlanner/
+2. edit file path at line 113 to your file path of 'blaser_result_downsampled.npy'. This is the downsampled result .npy file of the blaser scanning results.
+3. edit amplitude and frequency at line 116, 117. Now it is set at amp = 0.02, freq = 0.5.
+4. python path_planner_palpation.py
+5. it will generate a 'palpation_result.npy', which contain point positions, orientations, and stiffness.
