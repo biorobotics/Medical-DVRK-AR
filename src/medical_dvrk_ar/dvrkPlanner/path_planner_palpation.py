@@ -91,27 +91,30 @@ class Task_Planner_palpation:
                 dest = make_PyKDL_Frame(self.data[itr])
                 self.server.move(dest, self.server.maxForce)
                 # update current point
-                print(self.cur_point)
+                # print(self.cur_point)
                 self.cur_point += 1
                 
                 # append current pose data
                 currentPose = self.server.robot.get_current_position() #PyKDLFrame
-                translation = (currentPose.p[0],currentPose.p[1],currentPose.p[2])
+                translation = [currentPose.p[0],currentPose.p[1],currentPose.p[2]]
                 rotation = currentPose.M.GetQuaternion()
+                run_time = rospy.Time.now().to_sec()
+                offset_z = amplitude * math.sin(frequency * run_time)
+                translation[2] += offset_z
                 stiffness = calculate_stiffness(translation)
-                # print('stiffness: ', stiffness)
+                print('stiffness: ', stiffness)
                 point_data = (translation[0],translation[1],translation[2], rotation[0],rotation[1],rotation[2],rotation[3], stiffness)
                 self.output_nparray.append(point_data)
-                
+
                 # update output file every N points
                 update_rate = 10
                 if itr % update_rate == 0:
                     np.save('palpation_result.npy', np.array(self.output_nparray))
-                    print('file saved')
+                    #print('file saved')
                 # break if reach the end of the list
                 if self.cur_point >= self.number_of_data:
                     np.save('palpation_result.npy', np.array(self.output_nparray))
-                    print('file saved')
+                    #print('file saved')
                     break
             break
 
@@ -120,9 +123,10 @@ class Task_Planner_palpation:
 
 if __name__=="__main__":
     # for path planner for palpation, it should read in the blaser_result.npy file
-    file_path = "/home/alex/MRSD_sim/src/Medical-DVRK-AR/data/" 
+    file_path = "/home/chang/catkin_ws/src/Medical-DVRK-AR/data/"
     file_name = "sorted_liverGrid_norm.npy"
-    # file_name = "blaser_results.npy"
+    #file_name = "blaser_results.npy"
+    #file_name = "new_planner_points.npy"
     data = np.load(file_path + file_name)
     frequency = 0.5
     amplitude = 0.02
