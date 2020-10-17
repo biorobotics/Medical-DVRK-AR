@@ -60,7 +60,8 @@ class stiffnessMap:
 		self.nearestTumorInd = np.argmin(np.column_stack((self.dist1, self.dist2, self.dist3)), axis = 1)
 
 
-	def binaryMap(self):		
+	def binaryMap(self):
+		# Forget about this function, it's not what we use. Focus on heatMap() that follows		
 		for i in range(self.point_nparray.shape[0]):
 			if((self.dist1[i] < self.tumorBinaryThresh or \
 				self.dist2[i] < self.tumorBinaryThresh or \
