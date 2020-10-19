@@ -97,5 +97,5 @@ if __name__ == "__main__":
     mySinWave = sinWavePoints(amplitude, frequency)
 
     # pass any npy file start with [x,y,z,....]
-    mySinWave.readArrayfromFile('/home/alex/MRSD_sim/src/Medical-DVRK-AR/data/blaser_results.npy')
+    mySinWave.readArrayfromFile('/home/alex/MRSD_sim/src/Medical-DVRK-AR/data/palpation_result.npy')
     mySinWave.publish_pointcloud()
