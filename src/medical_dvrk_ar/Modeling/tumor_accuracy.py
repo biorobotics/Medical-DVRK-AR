@@ -49,8 +49,7 @@ def healthy_misclassification(healthy_points, tumorLoc, tumorBinaryThresh):
 
 def compute_accuracy(palpated_points, tumorLoc, tumorBinaryThresh):
 	# Returns (x,y,z) of points which got stiffness = 1 after palpation
-	# tumor_points = tumor1_points + tumor2_points + tumor3_points
-	tumor_points = palpated_points[palpated_points[:6] == 1,:3]
+	
 	# Tumor 1 points, returns points where 4th column is 1 (whichTumor)
 	tumor1_points = palpated_points[palpated_points[:3] == 1,:3]
 	# Tumor 2 points, returns points where 4th column is 2 (whichTumor)
@@ -63,7 +62,13 @@ def compute_accuracy(palpated_points, tumorLoc, tumorBinaryThresh):
 
 	# Check tumor localization accuracy for each tumor 
 	for i in [1,2,3]:
-		tumor_estimation(tumor_points, i, tumorLoc[i], tumorBinaryThresh)
+		if i == 1:
+			tumor_estimation(tumor1_points, i, tumorLoc[0], tumorBinaryThresh)
+		if i == 2:
+			tumor_estimation(tumor2_points, i, tumorLoc[1], tumorBinaryThresh)
+		if i == 3:
+			tumor_estimation(tumor3_points, i, tumorLoc[2], tumorBinaryThresh)
+
 
 	# Check healthy tissue misclassification 
 	healthy_misclassification(healthy_points, tumorLoc, tumorBinaryThresh)
