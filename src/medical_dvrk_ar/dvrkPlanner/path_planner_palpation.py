@@ -100,18 +100,20 @@ class Task_Planner_palpation:
                 #rotation = currentPose.M.GetQuaternion()
                 run_time = rospy.Time.now().to_sec()
                 offset_z = amplitude * math.sin(frequency * run_time)
-                translation[2] += offset_z
+                translation[2] -= offset_z
                 which_tumor, euclid_norm, stiffness, tumor_or_not = calculate_stiffness(translation)[:]
                 point_data = (translation[0],translation[1],translation[2], which_tumor, euclid_norm, stiffness, tumor_or_not)
                 self.output_nparray.append(point_data)
 
                 # update output file every N points
                 update_rate = 10
+                file_path = "/home/alex/MRSD_sim/src/Medical-DVRK-AR/data/"
+                file_name = "palpation_result.npy"
                 if itr % update_rate == 0:
-                    np.save('palpation_result.npy', np.array(self.output_nparray))
+                    np.save(file_path+file_name, np.array(self.output_nparray))
                 # break if reach the end of the list
                 if self.cur_point >= self.number_of_data:
-                    np.save('palpation_result.npy', np.array(self.output_nparray))
+                    np.save(file_path+file_name, np.array(self.output_nparray))
                     break
             break
 
