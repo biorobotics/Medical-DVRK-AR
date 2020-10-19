@@ -26,11 +26,3 @@ def calculate_stiffness(curr_point):
 
 	return stiffness_val
 
-
-'''
-TODO: Need to discuss with Cora and figure out from the heatmap visualization what threshold to set on the stiffness norm values
-to convert the heatmap to a binary tumor/not tumor map. The function above assigns the stiffness value (norm value, not 0/1) of 
-the nearest point in the ground truth liver model to the currently palpated point.
-'''
-
-

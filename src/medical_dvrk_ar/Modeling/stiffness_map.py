@@ -25,9 +25,9 @@ class stiffnessMap:
 		# normalized stiffness values greater than this are part of tumor
 		self.tumorNormThresh = 0.0835
 		self.point_nparray  = np.load(path) # N by 3 matrix
-		self.tumorLoc1 = self.point_nparray[100,:]+[0,0,0.001]
-		self.tumorLoc2 = self.point_nparray[450,:]+[0,0,0.002]
-		self.tumorLoc3 = self.point_nparray[900,:]+[0,0,0.003]
+		self.tumorLoc1 = self.point_nparray[100,:]+[0,0,0.001,0,0,0,0]
+		self.tumorLoc2 = self.point_nparray[450,:]+[0,0,0.002,0,0,0,0]
+		self.tumorLoc3 = self.point_nparray[900,:]+[0,0,0.003,0,0,0,0]
 		self.point_stiff = np.copy(self.point_nparray)
 
 		self.dist1 = np.zeros(self.point_nparray.shape[0])

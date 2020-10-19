@@ -79,5 +79,5 @@ if __name__ == '__main__':
 
 	tumorBinaryThresh = 0.012
 	# @Alex, store the palpated stiffness as a numpy file called 'palpation_stiffness.npy'
-	palpated_map = np.load('../../../data/palpation_stiffness.npy')
+	palpated_map = np.load('../../../data/palpation_result.npy')
 	compute_accuracy(palpated_map, tumorLoc, tumorBinaryThresh)

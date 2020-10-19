@@ -1,0 +1,32 @@
+1) liver2.stl: orginal liver stl converted from cad model.
+	|
+	| (......)
+        |
+2) 60degree_norm.npy: pointcloud data converted from liver2.stl
+	|
+	| (pointcloud_sort.py)
+	|
+3) sorted_liverGrid.npy: downsampled pointcloud data from 60degree_norm.npy
+	|
+	| (path_planner.py)
+	|
+4) blaser_results.npy
+	|
+	|
+	|
+5) 
+	|
+	| (pointcloud_sort.py)
+	|
+6) new_planner_points.npy
+	|
+	| (path_planner_palpation.py)
+	|
+7) palpation_result.npy
+	|
+	| (tumor_accuracy.py)
+	|
+8)
+	|
+	|
+	|

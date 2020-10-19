@@ -241,8 +241,9 @@ class BlaserSim(object):
         # m.color.a = 1.0
         # self.blaser_pub.publish(m)
 
-        
-        np.save('./blaser_results.npy', self.received_points)
+        file_path = "/home/alex/MRSD_sim/src/Medical-DVRK-AR/data/"
+        file_name = "blaser_results.npy"
+        np.save(file_path+file_name, self.received_points)
 
 
 

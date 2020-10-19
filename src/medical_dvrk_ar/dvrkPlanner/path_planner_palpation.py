@@ -102,7 +102,6 @@ class Task_Planner_palpation:
                 offset_z = amplitude * math.sin(frequency * run_time)
                 translation[2] += offset_z
                 stiffness = calculate_stiffness(translation)
-                print('stiffness: ', stiffness)
                 point_data = (translation[0],translation[1],translation[2], rotation[0],rotation[1],rotation[2],rotation[3], stiffness)
                 self.output_nparray.append(point_data)
 
@@ -110,11 +109,9 @@ class Task_Planner_palpation:
                 update_rate = 10
                 if itr % update_rate == 0:
                     np.save('palpation_result.npy', np.array(self.output_nparray))
-                    #print('file saved')
                 # break if reach the end of the list
                 if self.cur_point >= self.number_of_data:
                     np.save('palpation_result.npy', np.array(self.output_nparray))
-                    #print('file saved')
                     break
             break
 
