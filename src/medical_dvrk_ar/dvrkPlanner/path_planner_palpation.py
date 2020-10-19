@@ -97,12 +97,12 @@ class Task_Planner_palpation:
                 # append current pose data
                 currentPose = self.server.robot.get_current_position() #PyKDLFrame
                 translation = [currentPose.p[0],currentPose.p[1],currentPose.p[2]]
-                rotation = currentPose.M.GetQuaternion()
+                #rotation = currentPose.M.GetQuaternion()
                 run_time = rospy.Time.now().to_sec()
                 offset_z = amplitude * math.sin(frequency * run_time)
                 translation[2] += offset_z
-                stiffness = calculate_stiffness(translation)
-                point_data = (translation[0],translation[1],translation[2], rotation[0],rotation[1],rotation[2],rotation[3], stiffness)
+                which_tumor, euclid_norm, stiffness, tumor_or_not = calculate_stiffness(translation)[:]
+                point_data = (translation[0],translation[1],translation[2], which_tumor, euclid_norm, stiffness, tumor_or_not)
                 self.output_nparray.append(point_data)
 
                 # update output file every N points
@@ -120,7 +120,7 @@ class Task_Planner_palpation:
 
 if __name__=="__main__":
     # for path planner for palpation, it should read in the blaser_result.npy file
-    file_path = "/home/chang/catkin_ws/src/Medical-DVRK-AR/data/"
+    file_path = "/home/alex/MRSD_sim/src/Medical-DVRK-AR/data/"
     file_name = "sorted_liverGrid_norm.npy"
     #file_name = "blaser_results.npy"
     #file_name = "new_planner_points.npy"
