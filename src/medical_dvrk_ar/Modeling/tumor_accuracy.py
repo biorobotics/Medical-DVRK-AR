@@ -28,7 +28,8 @@ def tumor_estimation(tumor_points, which_tumor, current_tumor, tumorBinaryThresh
 			tumor_correct_classified = tumor_correct_classified + 1
 		
 	tumor_acc = (tumor_correct_classified/tumor_points.shape[0])*100
-	print('Tumor {} has been correctly classified with accuracy = {}', .format(which_tumor, tumor_acc))
+	print('Tumor {} has been correctly classified with accuracy = {}'.format(which_tumor, tumor_acc))
+	# print()
 
 def healthy_misclassification(healthy_points, tumorLoc, tumorBinaryThresh):
 	healthy_misclassified = 0
@@ -44,7 +45,7 @@ def healthy_misclassification(healthy_points, tumorLoc, tumorBinaryThresh):
 			healthy_misclassified = healthy_misclassified + 1
 
 	misclassified_acc = (healthy_misclassified/healthy_points.shape[0])*100
-	print('Percentage of healthy tissue incorrectly labelled as cancerous = {}', .format(misclassified_acc))
+	print('Percentage of healthy tissue incorrectly labelled as cancerous = {}' .format(misclassified_acc))
 
 
 def compute_accuracy(palpated_points, tumorLoc, tumorBinaryThresh):
@@ -75,6 +76,18 @@ def compute_accuracy(palpated_points, tumorLoc, tumorBinaryThresh):
 
 
 if __name__ == '__main__':
+	
+	parser = argparse.ArgumentParser(description='to estimate tumor accuracies')
+	parser.add_argument('--path',help='the path to the (x,y,z) npy file to make the stiffness map')
+	args = parser.parse_args()
+
+	stiffnessMap = stiffnessMap(args.path, args.map_type)
+
+	point_nparray  = np.load() # N by 3 matrix
+	tumorLoc1 = self.point_nparray[100,:]+[0,0,0.001]
+	tumorLoc2 = self.point_nparray[450,:]+[0,0,0.002]
+	tumorLoc3 = self.point_nparray[900,:]+[0,0,0.003]
+
 	# These were the tumor centers defined for the ground truth stiffness map
 	tumorLoc1 = point_nparray[100,:]+[0,0,0.001]
 	tumorLoc2 = point_nparray[450,:]+[0,0,0.002]
