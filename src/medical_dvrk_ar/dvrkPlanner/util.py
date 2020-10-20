@@ -46,7 +46,7 @@ def make_PyKDL_Frame(point):
     pykdl_point.M = PyKDL.Rotation.Quaternion(point[3],point[4],point[5],point[6])
     return pykdl_point
 
-    
+
 '''
 We notice that the robot sometimes collides with the liver. To overcome this, instead of simply moving the robot arm to the next commanded point
 from the resolved-rates function, we first predict where this commanded point will be in this time-step (it's z-coordinate particularly).
@@ -73,3 +73,37 @@ def nearest_point(next_point):
 			nearest_liver_point = liver_points[i,:3]
 
 	return nearest_liver_point
+
+'''
+Input: 1. the (x,y,z) of the point that was just palpated
+	   2. ground truth stiffness map of liver
+Output: A numpy array of size 4 containing the stiffness parameters of the nearest point in the ground truth
+'''
+
+def calculate_stiffness(curr_point):
+	# load the numpy file containing liver points and ground truth stiffness value 
+	gt_stiffness = np.load('/home/alex/MRSD_sim/src/Medical-DVRK-AR/data/points_with_stiffness.npy')
+	gt_which_tumor = gt_stiffness[:,3]
+	gt_euclidean_norm = gt_stiffness[:,4]
+	gt_normalized_stiff = gt_stiffness[:,5]
+	gt_tumor_or_not = gt_stiffness[:,6]
+
+	nearest_point_norm = np.inf
+
+	for i in range(gt_stiffness.shape[0]):
+		each_point = gt_stiffness[i,:3]
+		dist = np.linalg.norm(each_point - curr_point)
+		if(dist < nearest_point_norm):
+			nearest_point_norm = dist
+			'''
+			For the palpated point, append the nearest point's (in ground truth) euclidean norm (d),
+			normalized_stiff (normalized 1/d), and if it is a tumor or not
+			'''
+			which_tumor = gt_which_tumor[i]
+			euclid_norm = gt_euclidean_norm[i]
+			normalized_stiff_val = gt_normalized_stiff[i]
+			tumor_or_not = gt_tumor_or_not[i]
+
+	# The palpated point now has the same tumor attributes as the nearest point in the ground truth stiffness map
+	palpated_output = np.array([which_tumor,euclid_norm,normalized_stiff_val,tumor_or_not])
+	return palpated_output

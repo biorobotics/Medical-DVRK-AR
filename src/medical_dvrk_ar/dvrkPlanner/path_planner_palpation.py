@@ -7,9 +7,8 @@ import PyKDL
 import numpy as np
 from tf_conversions import posemath
 import os.path
-from point_estimation import make_PyKDL_Frame
+from util import make_PyKDL_Frame, calculate_stiffness
 from robot_motion import ControlServer_palpation
-from palpation_stiffness import calculate_stiffness
 
 '''
 Task_Planner Class (Object)
