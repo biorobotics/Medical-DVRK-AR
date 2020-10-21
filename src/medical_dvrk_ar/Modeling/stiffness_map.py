@@ -19,18 +19,20 @@ class stiffnessMap:
 		self.tumorNormThresh: Any point with a normalized value greater than this is assigned stiffness value of 1 (Heat Map)
 		'''
 		self.which_map = which_map
-
-		self.tumorBinaryThresh = 0.012
+		# Increased the radius of tumor from 0.012 to 0.02
+		self.tumorBinaryThresh = 0.02
 
 		# normalized stiffness values greater than this are part of tumor
-		self.tumorNormThresh = 0.0835
+		# this value is exactly what's needed to convert the heat map to binary map
+		self.tumorNormThresh = 0.05
 		'''
 		Update from meeting on October 20: Assume the input file is Nx7, so remove the last 4 columns and work with only the first 3 columns
 		'''		
 		liver_points_withNormals  = np.load(path) # could be Nx7 matrix
 		self.point_nparray = liver_points_withNormals[:,0:3] # will contain (x,y,z) coordinates of liver only
 		self.tumorLoc1 = self.point_nparray[100,:]+[0,0,0.001]
-		self.tumorLoc2 = self.point_nparray[450,:]+[0,0,0.002]
+		self.tumorLoc2 = self.point_nparray[1150,:]+[0,0,0.002]
+		# self.tumorLoc2 = self.point_nparray[450,:]+[0,0,0.002]
 		self.tumorLoc3 = self.point_nparray[900,:]+[0,0,0.003]
 		self.point_stiff = np.copy(self.point_nparray)
 
@@ -75,11 +77,11 @@ class stiffnessMap:
 		# For point that got stiffness value, figure out which tumor is is part of
 		for i in range(self.stiffness.shape[0]):
 			if(self.stiffness[i] == 1 and (self.dist1[i] < self.tumorBinaryThresh)):
-				self.whichTumor = 1
+				self.whichTumor[i] = 1
 			if(self.stiffness[i] == 1 and (self.dist2[i] < self.tumorBinaryThresh)):
-				self.whichTumor = 2
+				self.whichTumor[i] = 2
 			if(self.stiffness[i] == 1 and (self.dist3[i] < self.tumorBinaryThresh)):
-				self.whichTumor = 3
+				self.whichTumor[i] = 3
 		# For the binary map case, there is no need for normalized value, so just leave at as 0
 		self.stiffNormalized = np.zeros(self.point_nparray.shape[0])
 
@@ -158,7 +160,7 @@ class stiffnessMap:
 		if self.which_map == 'h':
 			self.heatMap()
 		self.appendStiffness()
-		# self.visualizeStiffness()
+		self.visualizeStiffness()
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description='To create stiffness map of liver')
