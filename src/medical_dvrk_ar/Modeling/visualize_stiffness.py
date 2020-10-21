@@ -43,11 +43,16 @@ class liverGrid:
 
     def convert_array_to_pointcloud2(self):
         """
-        param: 5 by N array [x y z distanceToTumorCenter/stiffness tumorOrNot]
+        inputs: N x 7 array
+            columns 1, 2, 3: (x, y, z) coordinate of point
+            column 4: which tumor the point belongs to. For points where this column has value 0, it is not part of a tumor
+            column 5: Euclidean norm of point from the nearest tumor center
+            column 6: Normalized stiffness value for heat map
+            column 7: Value 1 if part of tumor, 0 if not 
         return: pointcloud2
         """
         for i in range(self.point_nparray.shape[0]):
-            r = np.int(np.floor(self.point_nparray[i,3]*255))
+            r = np.int(np.floor(self.point_nparray[i,5]*255))
             gb=100-r if (r<100)else 0
             r = 50+r if(r<205)else r
             rgb = self.compressRGBA(r, gb, gb)
