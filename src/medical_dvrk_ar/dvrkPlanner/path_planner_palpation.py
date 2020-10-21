@@ -42,8 +42,6 @@ class Task_Planner_palpation:
     def __init__(self, data = {}, frequency = 0.0, amplitude = 0):    
         rospy.init_node('path_planner', anonymous=True)
         rate = rospy.Rate(10)
-        # self.server is the motion server for the robot
-        self.server = ControlServer_palpation(amplitude,frequency)
         # self.predict_period is the update period of the simulation
         self.predict_period = 100
         # self.sim_start_time is the start time (ros time) of the simulation
@@ -54,12 +52,18 @@ class Task_Planner_palpation:
         self.amp = amplitude
         # self.data is the filtered data 
         self.data = data
+        # self.server is the motion server for the robot
+        self.server = ControlServer_palpation(amplitude,frequency, self.data)
         # self.cur_point stores the current iteration id
         self.cur_point = 0
         # self.number_of_data is the total number of data points
         self.number_of_data = data.shape[0]
         # self.output_nparray is the output file of the palpation
         self.output_nparray = [] 
+        # self.threshold_stiffness is a threshold stiffness to skip points
+        self.threshold_stiffness = 0.05
+        # self.skip_count how many points have been skipped consecutively
+        self.skip_count = 0
 
         print('number of data', self.number_of_data)
 
@@ -83,16 +87,18 @@ class Task_Planner_palpation:
         #so we will now fake these robot pose.
         self.robot_pose = self.server.robot.get_current_position()
 
+        itr = 0
+
         while (cur_time <= end_time):
             #Visit points in the data 
-            for itr in range (self.cur_point, self.number_of_data):
-            # for itr in range (self.cur_point, 10):
+            while (itr < self.number_of_data):
                 dest = make_PyKDL_Frame(self.data[itr])
                 self.server.move(dest, self.server.maxForce)
                 # update current point
-                # print(self.cur_point)
-                self.cur_point += 1
-                
+                # print('cur point', self.cur_point)
+                # self.cur_point = itr
+                print('current iteration', itr)
+                print('skip_count', self.skip_count)
                 # append current pose data
                 currentPose = self.server.robot.get_current_position() #PyKDLFrame
                 translation = [currentPose.p[0],currentPose.p[1],currentPose.p[2]]
@@ -103,6 +109,20 @@ class Task_Planner_palpation:
                 which_tumor, euclid_norm, stiffness, tumor_or_not = calculate_stiffness(translation)[:]
                 point_data = (translation[0],translation[1],translation[2], which_tumor, euclid_norm, stiffness, tumor_or_not)
                 self.output_nparray.append(point_data)
+                # naive approach to skip points during searching
+                if stiffness < self.threshold_stiffness:
+                    self.skip_count +=1
+                else: 
+                    self.skip_count = 0
+
+                if self.skip_count >= 5:
+                    itr +=3
+                elif self.skip_count >= 10:
+                    itr += 5
+                elif self.skip_count >= 15:
+                    itr += 8
+                else:
+                    itr +=1
 
                 # update output file every N points
                 update_rate = 10

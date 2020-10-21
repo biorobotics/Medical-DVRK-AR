@@ -8,7 +8,7 @@ from tf import TransformBroadcaster
 from geometry_msgs.msg import PoseStamped
 import os.path
 from scipy.spatial.transform import Rotation as R
-from util import estimation, make_PyKDL_Frame, estimation_numpy
+from util import estimation, make_PyKDL_Frame, estimation_numpy, nearest_point
 
 functionPath = os.path.dirname(os.path.realpath(__file__))
 
@@ -159,7 +159,7 @@ class ControlServer(object):
             self.robot.move(currentPose, interpolate = False)
             self.rate.sleep()
 class ControlServer_palpation(object):
-    def __init__(self, amplitude, frequency):
+    def __init__(self, amplitude, frequency,data):
 
         self.robot = psm('PSM1')
 
@@ -182,24 +182,21 @@ class ControlServer_palpation(object):
         }
 
         self.maxDepth = 0.01 # Meters
-        self.maxForce = 800 # Not sure of this?
+        self.maxForce = 1500 # Not sure of this?
         self.safeZ = .05 # Safe height above organ in meters
         self.normalDistance = 0.005 # Meters
         self.toolOffset = 0.01
         self.amp = amplitude
         self.freq = frequency
+        self.data = data
 
         # testing estimation
         self.start_time = rospy.Time.now().to_sec()
 
     
     def move(self,desiredPose, maxForce):
-        # currentPose = self.robot.get_desired_position()
-
-        # print(desiredPose.p)
         currentPose = self.robot.get_current_position()
         measuredPose_previous = self.robot.get_current_position()
-
 
         while not rospy.is_shutdown():
             # get current and desired robot pose (desired is the top of queue)
@@ -220,8 +217,13 @@ class ControlServer_palpation(object):
 
             if xDotMotion.vel.Norm() <= 0.001 and xDotMotion.rot.Norm() <= 0.1:
                 break    
-                      
-            currentPose = nextPose 
+
+            # calculate the surface at the next time step        
+            closest_point = nearest_point(np.array([desiredPose.p[0],desiredPose.p[1], desiredPose.p[2]]), self.data[:,:3])
+            surface_height = estimation_numpy(closest_point, self.amp, self.freq, 0, rospy.Time.now().to_sec())[2]
+            if (nextPose.p[2] < surface_height):
+                nextPose.p[2] = surface_height
+            currentPose = nextPose
             self.robot.move(currentPose, interpolate = False)
             self.rate.sleep()
 if __name__=="__main__":
