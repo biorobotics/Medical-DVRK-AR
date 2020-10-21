@@ -7,7 +7,7 @@ import PyKDL
 import numpy as np
 from tf_conversions import posemath
 import os.path
-from util import make_PyKDL_Frame, calculate_stiffness
+from util import make_PyKDL_Frame, calculate_stiffness, nearest_point
 from robot_motion import ControlServer_palpation
 
 '''
