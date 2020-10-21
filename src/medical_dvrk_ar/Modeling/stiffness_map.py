@@ -93,10 +93,10 @@ class stiffnessMap:
 
 		# Each point is assigned a value of 1/min_dist
 		for i in range(self.point_nparray.shape[0]):
-			if(self.nearestTumorDist[i] > 1e-3):
+			if(self.nearestTumorDist[i] > 1e-2):
 				self.stiffRange[i] = 1/self.nearestTumorDist[i]
 			else:
-				self.stiffRange[i] = 1000
+				self.stiffRange[i] = 100
 
 		# To normalize, first find max value in the (1/dist) array
 		maxRangeVal = np.max(self.stiffRange)
