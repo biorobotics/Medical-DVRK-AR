@@ -37,8 +37,8 @@ def estimation_numpy(data, amp, freq, sim_start_time, time):
     pose_z = data[2]
     run_time = time - sim_start_time
     pose_Z = pose_z + amp * math.sin(freq * run_time)
-    data[2] = pose_z
-    return data
+    estimated_point = np.array([data[0], data[1], pose_Z])
+    return estimated_point
 
 def make_PyKDL_Frame(point):
     pykdl_point = PyKDL.Frame()
@@ -60,19 +60,11 @@ Output: The point (x,y,z) which is the nearest point on the liver's surface to t
 The prediction of where this nearest point on the liver will be in the current time step will be done in the palpation code using the existing prediction function
 '''
 
-def nearest_point(next_point):
-	# Load the numpy file which is the liver point cloud representation
-	liver_points = np.load('/home/alex/MRSD_sim/src/Medical-DVRK-AR/data/60degree_norm.npy')
-	nearest_dist = np.inf
-	nearest_liver_point = np.zeros(3)
-
-	for i in range(liver_points.shape[0]):
-		dist = np.linalg.norm(liver_points[i,:3] - next_point)
-		if dist < nearest_dist:
-			nearest_dist = dist
-			nearest_liver_point = liver_points[i,:3]
-
-	return nearest_liver_point
+def nearest_point(next_point, liver_points):
+    # Load the numpy file which is the liver point cloud representation
+    # I guess this will be loaded in the main palpation file
+    d = np.sum(np.fabs(liver_points-next_point)**2, axis = 1)
+    return liver_points[np.argmin(d),:]
 
 '''
 Input: 1. the (x,y,z) of the point that was just palpated
