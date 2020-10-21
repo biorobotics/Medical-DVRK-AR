@@ -24,7 +24,11 @@ class stiffnessMap:
 
 		# normalized stiffness values greater than this are part of tumor
 		self.tumorNormThresh = 0.0835
-		self.point_nparray  = np.load(path) # N by 3 matrix
+		'''
+		Update from meeting on October 20: Assume the input file is Nx7, so remove the last 4 columns and work with only the first 3 columns
+		'''		
+		liver_points_withNormals  = np.load(path) # could be Nx7 matrix
+		self.point_nparray = liver_points_withNormals[:,0:3] # will contain (x,y,z) coordinates of liver only
 		self.tumorLoc1 = self.point_nparray[100,:]+[0,0,0.001]
 		self.tumorLoc2 = self.point_nparray[450,:]+[0,0,0.002]
 		self.tumorLoc3 = self.point_nparray[900,:]+[0,0,0.003]
