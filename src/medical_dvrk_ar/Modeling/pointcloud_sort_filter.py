@@ -425,7 +425,7 @@ class filter_pointcloud_for_path_planner():
 			self.Downsample2DGrid(vis=False)
 		if isPlyPath==False:
 			self.Average2DGrid(vis=False)
-		self.sorted_poinst_with_xy_position(vis=True)
+		self.sorted_poinst_with_xy_position(vis=False)
 
 		return my_filter.savefile()
 
