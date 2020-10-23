@@ -152,27 +152,21 @@ class BlaserSim(object):
         collisions = end_vecs
         colors = [np.uint32(0xff0000) for vec in end_vecs]
         total_points = 0
+        t = 0
         for idx, end in enumerate(end_vecs):
             points_intersected = []
             for collider in self.colliders:
-                code = collider.IntersectWithLine(start_vec, end, intersection_vtk, None)
-                point_data = intersection_vtk.GetData()
-                n_points = point_data.GetNumberOfTuples()
-
-                for i in range(n_points):
-                    point = point_data.GetTuple3(i)
-                    points_intersected.append(point)
-                    self.received_points.append(np.array(point))
+                t = vtk.mutable(0)
+                pos = [0.0, 0.0, 0.0]
+                pcoords = [0.0, 0.0, 0.0]
+                subId = vtk.mutable(0)
+                code = collider.IntersectWithLine(start_vec, end, 0.01, t, pos, pcoords, subId)
+                if pos != [0.0, 0.0, 0.0]:
+                    colors[idx] = np.uint32(0x00ff00)
+                    collisions[idx] = pos
+                    self.received_points.append(np.array(pos))
                     total_points +=1
-            if points_intersected:                
-                colors[idx] = np.uint32(0x00ff00)
-                min_dist = float('inf')
-                min_collision = collisions[idx]
-                for pt in points_intersected:
-                    dist = np.linalg.norm(np.subtract(start_vec, pt))
-                    if dist < min_dist:
-                        min_collision = pt
-                collisions[idx] = min_collision
+
         return collisions, colors
 
     def add_offset_to_collisions(self, collisions, offset):
@@ -241,7 +235,7 @@ class BlaserSim(object):
         # m.color.a = 1.0
         # self.blaser_pub.publish(m)
 
-        file_path = "/home/alex/MRSD_sim/src/Medical-DVRK-AR/data/"
+        file_path = "/home/anjalipemmaraju/catkin_ws/src/Medical-DVRK-AR/data/"
         file_name = "blaser_results.npy"
         np.save(file_path+file_name, self.received_points)
 
