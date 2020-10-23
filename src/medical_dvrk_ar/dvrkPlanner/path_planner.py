@@ -3,6 +3,7 @@ import rospy
 from dvrk import psm
 import math
 import PyKDL
+import argparse
 import numpy as np
 from tf_conversions import posemath
 import os.path
@@ -110,9 +111,12 @@ class Task_Planner:
 
 
 if __name__=="__main__":
-    file_path = "/home/alex/MRSD_sim/src/Medical-DVRK-AR/data/" 
-    file_name = "sorted_liverGrid_norm.npy"
-    data = np.load(file_path + file_name)
+    parser = argparse.ArgumentParser(description='read the point cloud data for scan')
+    parser.add_argument('--path',help='the path to the scan npy file')
+    args = parser.parse_args()
+
+
+    data = np.load(args.path)
     amplitude = 0.02 #0.02
     frequency = 0.5 #0.5
     

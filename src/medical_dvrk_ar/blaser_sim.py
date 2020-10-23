@@ -99,6 +99,7 @@ class BlaserSim(object):
         print("Reading from json file %s" % json_config)
         with open(json_config, 'r') as json_file:
             data = json.load(json_file)
+            self.data_folder = json_config[:-28] + "data/"
             # Set up subscribers
             self.robot_sub = rospy.Subscriber(data['robot_topic'], PoseStamped, self.pose_cb)
             self.marker_pub = rospy.Publisher('collison_markers', MarkerArray, queue_size=1)
@@ -235,9 +236,8 @@ class BlaserSim(object):
         # m.color.a = 1.0
         # self.blaser_pub.publish(m)
 
-        file_path = "/home/anjalipemmaraju/catkin_ws/src/Medical-DVRK-AR/data/"
         file_name = "blaser_results.npy"
-        np.save(file_path+file_name, self.received_points)
+        np.save(self.data_folder+file_name, self.received_points)
 
 
 

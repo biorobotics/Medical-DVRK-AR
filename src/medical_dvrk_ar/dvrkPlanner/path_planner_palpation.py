@@ -3,6 +3,7 @@ import rospy
 from dvrk import psm
 import math
 import PyKDL
+import argparse
 
 import numpy as np
 from tf_conversions import posemath
@@ -39,7 +40,7 @@ Task_Planner Class (Object)
 '''
 class Task_Planner_palpation:
     # Exp: Initiating a Task_Planner class based on the given inputs.
-    def __init__(self, data = {}, frequency = 0.0, amplitude = 0):    
+    def __init__(self, data = {}, frequency = 0.0, amplitude = 0, dest_folder = "./"):    
         rospy.init_node('path_planner', anonymous=True)
         rate = rospy.Rate(10)
         # self.predict_period is the update period of the simulation
@@ -61,11 +62,11 @@ class Task_Planner_palpation:
         # self.output_nparray is the output file of the palpation
         self.output_nparray = [] 
         # self.threshold_stiffness is a threshold stiffness to skip points
-        self.threshold_stiffness = 0.05
+        self.threshold_stiffness = 0.5
         # self.skip_count how many points have been skipped consecutively
         self.skip_count = 0
-
         print('number of data', self.number_of_data)
+        self.dest_folder = dest_folder
 
 
 
@@ -106,7 +107,8 @@ class Task_Planner_palpation:
                 run_time = rospy.Time.now().to_sec()
                 offset_z = amplitude * math.sin(frequency * run_time)
                 translation[2] -= offset_z
-                which_tumor, euclid_norm, stiffness, tumor_or_not = calculate_stiffness(translation)[:]
+                which_tumor, euclid_norm, stiffness, tumor_or_not = calculate_stiffness(translation, self.dest_folder)[:]
+                print('stiffness',stiffness)
                 point_data = (translation[0],translation[1],translation[2], which_tumor, euclid_norm, stiffness, tumor_or_not)
                 self.output_nparray.append(point_data)
                 # naive approach to skip points during searching
@@ -116,17 +118,15 @@ class Task_Planner_palpation:
                     self.skip_count = 0
 
                 if self.skip_count >= 5:
-                    itr +=3
+                    itr +=4
                 elif self.skip_count >= 10:
-                    itr += 5
-                elif self.skip_count >= 15:
                     itr += 8
                 else:
                     itr +=1
 
                 # update output file every N points
                 update_rate = 10
-                file_path = "/home/alex/MRSD_sim/src/Medical-DVRK-AR/data/"
+                file_path = self.dest_folder + "/"
                 file_name = "palpation_result.npy"
                 if itr % update_rate == 0:
                     np.save(file_path+file_name, np.array(self.output_nparray))
@@ -140,15 +140,19 @@ class Task_Planner_palpation:
 
 
 if __name__=="__main__":
-    # for path planner for palpation, it should read in the blaser_result.npy file
-    file_path = "/home/alex/MRSD_sim/src/Medical-DVRK-AR/data/"
-    file_name = "sorted_liverGrid_norm.npy"
-    #file_name = "blaser_results.npy"
-    #file_name = "new_planner_points.npy"
-    data = np.load(file_path + file_name)
+    # for path planner for palpation, it should read in a .npy file
+    parser = argparse.ArgumentParser(description='read the point cloud data for palpation')
+    parser.add_argument('--path',help='the path to the palpation npy file')
+    parser.add_argument('--dest', help = 'which folder to store the file')
+    args = parser.parse_args()
+
+
+    file_path = args.path
+    dest_folder = args.dest
+    data = np.load(file_path)
     frequency = 0.5
     amplitude = 0.02
     
-    planner = Task_Planner_palpation(data, frequency, amplitude)
+    planner = Task_Planner_palpation(data, frequency, amplitude, dest_folder)
     planner.run()
 
