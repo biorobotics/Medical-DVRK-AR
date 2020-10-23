@@ -166,6 +166,9 @@ class BlaserSim(object):
                     colors[idx] = np.uint32(0x00ff00)
                     collisions[idx] = pos
                     self.received_points.append(np.array(pos))
+                    run_time = rospy.Time.now().to_sec()
+                    offset_z = self.amp * math.sin(self.freq * run_time)
+                    collisions[idx][2] += offset_z
                     total_points +=1
 
         return collisions, colors
