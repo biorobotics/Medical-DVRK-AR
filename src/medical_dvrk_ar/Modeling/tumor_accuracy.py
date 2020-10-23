@@ -48,15 +48,12 @@ def healthy_misclassification(healthy_points, tumorLoc1, tumorLoc2, tumorLoc3, t
 
 def compute_accuracy(palpated_points, tumorLoc1, tumorLoc2, tumorLoc3, tumorBinaryThresh):
 	# Returns (x,y,z) of points which got stiffness = 1 after palpation
-	# print('shape = ',tumorLoc1.shape)
 	# Tumor 1 points, returns points where 4th column is 1 (whichTumor)
 	tumor1_points = palpated_points[palpated_points[:,3] == 1,:3]
 	# Tumor 2 points, returns points where 4th column is 2 (whichTumor)
 	tumor2_points = palpated_points[palpated_points[:,3] == 2,:3]
-	# print(tumor2_points.shape)
 	# Tumor 3 points, returns points where 4th column is 3 (whichTumor)
 	tumor3_points = palpated_points[palpated_points[:,3] == 3,:3]
-	# print(tumor3_points.shape)
 
 	# Returns (x,y,z) of points which got stiffness = 0 after palpation
 	healthy_points = palpated_points[palpated_points[:,6] == 0,:3]
