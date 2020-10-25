@@ -115,7 +115,6 @@ class filter_pointcloud_for_path_planner():
 		self.raw_pcl_with_raw_norm = np.concatenate((position, normals_outward),axis=1)
 		return self.raw_pcl_with_raw_norm
 
-
 	def filter_vector_with_angle_threshold(self, vis=False):
 		"""only filter out the points with normals within the max_angle cone of z positive direction
 		to ensure the robot arm can reach the point
@@ -135,40 +134,15 @@ class filter_pointcloud_for_path_planner():
 			pcd.points = o3d.utility.Vector3dVector(self.raw_pcl_with_filtered_norm[:,0:3])
 			o3d.visualization.draw_geometries([pcd])
 
+		self.sorted_pcl_with_filtered_norm = self.raw_pcl_with_filtered_norm
+
 	def sorted_poinst_with_xy_position(self,vis=False):
-		"""
-		this function turn the disordered point cloud into a sorted one
-		which can directly be fed into the path planner in dvrk
-		"""
-		point_num = self.raw_pcl_with_filtered_norm.shape[0]
-		dtype = [('x',float),('y',float),('z',float),('normal_x',float),('normal_y',float),('normal_z',float)]
-		self.sorted_pcl_with_filtered_norm = self.raw_pcl_with_filtered_norm.view(dtype)
-		self.sorted_pcl_with_filtered_norm = self.sorted_pcl_with_filtered_norm.reshape((point_num,))
-		self.sorted_pcl_with_filtered_norm = np.sort(self.sorted_pcl_with_filtered_norm, order=["x","y"])
-		self.sorted_pcl_with_filtered_norm = np.array(self.sorted_pcl_with_filtered_norm.tolist())
-		#to switch from zigzag to corner turn
-		line_startpoint_idx = []
 
-		for i in range(1,self.sorted_pcl_with_filtered_norm.shape[0]-1):
-			last_dis = np.linalg.norm(self.sorted_pcl_with_filtered_norm[i]-self.sorted_pcl_with_filtered_norm[i-1])
-			next_dis = np.linalg.norm(self.sorted_pcl_with_filtered_norm[i+1]-self.sorted_pcl_with_filtered_norm[i])
-			if next_dis > 2 * last_dis: # if the moving distance to next point is too large, it's probably the end of the line
-				line_startpoint_idx.append(i+1)
-
-		print("Line number:",len(line_startpoint_idx))
-
-		# reverse the order in a line
-		for i in range(len(line_startpoint_idx)-1):
-			self.sorted_pcl_with_filtered_norm[line_startpoint_idx[i]:line_startpoint_idx[i+1]] = self.sorted_pcl_with_filtered_norm[line_startpoint_idx[i]:line_startpoint_idx[i+1]][::-1]
-
-		self.sorted_pcl_with_filtered_norm[line_startpoint_idx[-1]:] = self.sorted_pcl_with_filtered_norm[line_startpoint_idx[-1]:][::-1]
-
-		# temp = self.sorted_pcl_with_filtered_norm[:,2]
-		# self.sorted_pcl_with_filtered_norm[:,2] = np.convolve([0.3, 0.4, 0.3], temp,'same')
+		self.sorted_pcl_with_filtered_norm = self.raw_pcl_with_filtered_norm
 
 		if vis:
 			pcd = o3d.geometry.PointCloud()
-			pcd.points = o3d.utility.Vector3dVector(self.sorted_pcl_with_filtered_norm[:,0:3])
+			pcd.points = o3d.utility.Vector3dVector(self.sorted_pcl_with_filtered_norm[0:180,0:3])
 			o3d.visualization.draw_geometries([pcd])
 
 	def Average2DGrid(self, vis=False):
@@ -222,7 +196,8 @@ class filter_pointcloud_for_path_planner():
 
 		newArray = np.empty((0, 6))
 
-		for x in halfXlist:
+		for idx_x, x in enumerate(halfXlist):
+			points_in_a_row = np.empty((0, 6))
 			for y in halfYlist:
 				sum_z = 0
 				points_num = 0
@@ -236,6 +211,7 @@ class filter_pointcloud_for_path_planner():
 						sum_norm = np.add(sum_norm,norm)
 						points_num+=1
 
+
 						# print ("The {}th point z is {}".format(points_num,z))
 				if (points_num == 0):
 					continue
@@ -244,7 +220,13 @@ class filter_pointcloud_for_path_planner():
 					# print("In total the sum of {} point z is {}, so the new z is {}".format(points_num, sum_z, z))
 					norm = sum_norm/points_num
 					appendArray = np.array([[x,y,z,norm[0],norm[1],norm[2]]])
-					newArray = np.concatenate((newArray, appendArray), axis=0)
+
+					points_in_a_row = np.concatenate((points_in_a_row, appendArray), axis=0)
+
+			if (idx_x%2==0):
+				newArray = np.concatenate((newArray, points_in_a_row), axis=0)
+			else:
+				newArray = np.concatenate((newArray, points_in_a_row[::-1]), axis=0)
 
 		pcArray = newArray
 		if vis:
@@ -279,18 +261,28 @@ class filter_pointcloud_for_path_planner():
 
 		newArray = np.empty((0, 6))
 
-		for x in halfXlist:
-			for y in halfYlist:
+		for idx_x, x in enumerate(halfXlist[:-1]):
+			points_in_a_row = np.empty((0, 6))
+			for idx_y, y in enumerate(halfYlist[:-1]):
 				min_distance = 100000000000
 				min_idx = 0
-				for (idx,points) in enumerate(pcArray):
-					distance = np.linalg.norm(points[0:2]-np.array([x,y]))
+				gridPoints = pcArray[(xArray >= x) * (xArray < halfXlist[idx_x+1]) * (yArray >= y) * (yArray < halfYlist[idx_y+1])]
 
-					if distance<min_distance:
-						min_distance=distance
-						min_idx = idx
-				# print("The {}th point distance is {}".format(min_idx, min_distance))
-				newArray = np.concatenate((newArray, pcArray[min_idx,:].reshape((1,6))), axis=0)
+				if gridPoints.shape[0]>0:
+					for (idx, points) in enumerate(gridPoints):
+						distance = np.linalg.norm(points[0:2] - np.array([x, y]))
+
+						if distance < min_distance:
+							min_distance = distance
+							min_idx = idx
+
+					points_in_a_row = np.concatenate((points_in_a_row, gridPoints[min_idx, :].reshape((1, 6))), axis=0)
+
+			if (idx_x%2==0):
+				newArray = np.concatenate((newArray, points_in_a_row), axis=0)
+			else:
+				newArray = np.concatenate((newArray, points_in_a_row[::-1]), axis=0)
+
 		pcArray = newArray
 
 		if vis:
@@ -425,7 +417,7 @@ class filter_pointcloud_for_path_planner():
 			self.Downsample2DGrid(vis=False)
 		if isPlyPath==False:
 			self.Average2DGrid(vis=False)
-		self.sorted_poinst_with_xy_position(vis=False)
+		self.sorted_poinst_with_xy_position(vis=True)
 
 		return my_filter.savefile()
 
@@ -454,6 +446,4 @@ if __name__ == "__main__":
 	a = my_filter.filter(file_path+CAD_data_name, isPlyPath=True)
 	print(a.shape)
 	np.save(file_path+"scanning_path_200_points.npy", a)
-
-
 
