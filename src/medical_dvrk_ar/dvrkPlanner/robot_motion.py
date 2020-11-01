@@ -222,7 +222,7 @@ class ControlServer_palpation(object):
             closest_point = nearest_point(np.array([desiredPose.p[0],desiredPose.p[1], desiredPose.p[2]]), self.data[:,:3])
             surface_height = estimation_numpy(closest_point, self.amp, self.freq, 0, rospy.Time.now().to_sec())[2]
             if (nextPose.p[2] < surface_height):
-                nextPose.p[2] = surface_height
+                nextPose.p[2] = surface_height + 0.01
             currentPose = nextPose
             self.robot.move(currentPose, interpolate = False)
             self.rate.sleep()
