@@ -97,6 +97,7 @@ def make_obb(stl_file, position=(0,0,0), orientation=(0,0,0,1), scale=(1,1,1)):
 class BlaserSim(object):
     def __init__(self, json_config, amplitude, frequency):
         print("Reading from json file %s" % json_config)
+        rospy.spin()
         with open(json_config, 'r') as json_file:
             data = json.load(json_file)
             self.data_folder = json_config[:-28] + "data/"
@@ -255,5 +256,5 @@ if __name__ == '__main__':
     frequency = 0.5 #0.5
     blaser = BlaserSim(args.json_config, amplitude, frequency)
 
-    rospy.spin()
+    # rospy.spin()
 

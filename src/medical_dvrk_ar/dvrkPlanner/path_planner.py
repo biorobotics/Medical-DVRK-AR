@@ -106,6 +106,7 @@ class Task_Planner:
                 if self.cur_point >= self.number_of_data:
                     break
             break
+        return True
 
 
 
