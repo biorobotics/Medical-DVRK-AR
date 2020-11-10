@@ -101,3 +101,13 @@ After launching Rviz, add in the following two rostopics to visualize the result
 7. python3 visualize_stiffness.py --path /path-to-local-repo/Medical-DVRK-AR/data/points_with_stiffness.npy
 8. In Rviz, add Pointcloud2 in liverStiffness topic, you should see a "grey blue" liver
 9. Change the "size" to 0.0005, you should see the "red" tumor
+
+## How to run smart palpation with gaussian process
+1. run roscore
+2. launch dvrk psm arm with command mentioned above
+3. run blaser_sim.py with command mentioned above
+4. The gaussian process palpation is in the dvrkPlanner fold
+$ python gp.py --path ~/your_workspace/src/Medical-DVRK-AR/data/palpation_path_25rows_25cols.npy --dest ~/your_workspace/src/Medical-DVRK-AR/src/medical_dvrk_ar/dvrkPlanner/
+
+
+
