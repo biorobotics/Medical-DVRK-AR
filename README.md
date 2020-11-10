@@ -107,7 +107,8 @@ After launching Rviz, add in the following two rostopics to visualize the result
 2. launch dvrk psm arm with command mentioned above
 3. run blaser_sim.py with command mentioned above
 4. The gaussian process palpation is in the dvrkPlanner fold
+```
 $ python gp.py --path ~/your_workspace/src/Medical-DVRK-AR/data/palpation_path_25rows_25cols.npy --dest ~/your_workspace/src/Medical-DVRK-AR/src/medical_dvrk_ar/dvrkPlanner/
-
+```
 
 
