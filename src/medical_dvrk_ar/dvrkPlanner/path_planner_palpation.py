@@ -105,7 +105,7 @@ class Task_Planner_palpation:
                 translation = [currentPose.p[0],currentPose.p[1],currentPose.p[2]]
                 #rotation = currentPose.M.GetQuaternion()
                 run_time = rospy.Time.now().to_sec()
-                offset_z = amplitude * math.sin(frequency * run_time)
+                offset_z = self.amp * math.sin(self.freq * run_time)
                 translation[2] -= offset_z
                 which_tumor, euclid_norm, stiffness, tumor_or_not = calculate_stiffness(translation, self.dest_folder)[:]
                 print('stiffness',stiffness)
