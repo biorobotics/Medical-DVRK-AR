@@ -28,7 +28,7 @@ from std_msgs.msg import Header
 import tf
 import geometry_msgs.msg
 
-class stiching_3d_pc:
+class stitching_3d_pc:
 	def __init__(self):
 		# self.cloud_points store all the point cloud we receive
 		self.cloud_points = []
@@ -83,6 +83,6 @@ class stiching_3d_pc:
 		# np.save('./blaser_results.npy', self.cloud_points)
 
 if __name__ == "__main__":
-	pcl_stitcher = stiching_3d_pc()
+	pcl_stitcher = stitching_3d_pc()
 	pcl_stitcher.blaser_listener()
 	

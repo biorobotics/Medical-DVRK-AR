@@ -15,7 +15,7 @@ from sensor_msgs import point_cloud2
 from std_msgs.msg import Header, Float64
 import math
 import copy
-
+from Modeling.pc_stitcher import stitching_3d_pc
 def clean_resource_path(path):
     new_path = path
     if path.find("package://") == 0:
@@ -97,7 +97,6 @@ def make_obb(stl_file, position=(0,0,0), orientation=(0,0,0,1), scale=(1,1,1)):
 class BlaserSim(object):
     def __init__(self, json_config, amplitude, frequency):
         print("Reading from json file %s" % json_config)
-        rospy.spin()
         with open(json_config, 'r') as json_file:
             data = json.load(json_file)
             self.data_folder = json_config[:-28] + "data/"
@@ -133,6 +132,7 @@ class BlaserSim(object):
                 scale = (ob['scale']['x'], ob['scale']['y'], ob['scale']['z'])
                 self.colliders.append(make_obb(file_path, pos, rot, scale))
             self.move_liver()
+    
     
     def move_liver(self):
         rate = rospy.Rate(10)
@@ -256,5 +256,5 @@ if __name__ == '__main__':
     frequency = 0.5 #0.5
     blaser = BlaserSim(args.json_config, amplitude, frequency)
 
-    # rospy.spin()
+    rospy.spin()
 
