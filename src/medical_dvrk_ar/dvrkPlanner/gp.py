@@ -143,7 +143,7 @@ class gpr_palpation():
         # locations to evaluate with gaussian process (instead of using grid)
         self.locations = data[:,0:2]
         # self.server is the motion server for the robot
-        self.server = ControlServer_palpation(amplitude,frequency, self.data)
+        self.server = ControlServer_palpation(amplitude, frequency, self.data)
         # self.number_of_data is the total number of data points
         self.number_of_data = data.shape[0]
         # self.data_probed record whether a point has been probed
@@ -279,7 +279,7 @@ class gpr_palpation():
             stiffness = np.array([stiffness])
 
         self.stiffnessCollected.append(stiffness.tolist())
-        print("All points probed:", self.probedPoints)
+        # print("All points probed:", self.probedPoints)
         #print("All stiffness collected:",self.stiffnessCollected)
         probedPoints_array = np.asarray(self.probedPoints)
         stiffnessCollected_array = np.asarray(self.stiffnessCollected)
@@ -360,8 +360,8 @@ if __name__ == "__main__":
     file_path = args.path
     dest_folder = args.dest
     data = np.load(file_path)
-    frequency = 0 #0.5
-    amplitude = 0 #0.02
+    frequency = 0.5 #0.5
+    amplitude = 0.02 #0.02
 
     rospy.init_node('gpr_python', anonymous=True)
     gpr = gpr_palpation(data, frequency, amplitude, dest_folder, algorithm_name='UCB', visualize=False, simulation=False, wait_for_searching_signal = True) # 'LSE', 'EI', 'UCB'
