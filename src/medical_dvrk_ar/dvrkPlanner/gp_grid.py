@@ -112,7 +112,7 @@ class gpr_palpation():
         self.simulation = simulation
         self.domain = {'L1':100, 'L2':100}
         self.grid = self.generateGrid()
-        #print(self.grid.shape)
+        print(self.grid.shape)
         self.groundTruth = self.generateStiffnessMap()
         self.gp = self.gp_init()
        
@@ -140,8 +140,6 @@ class gpr_palpation():
         self.amp = amplitude
         # self.data is the filtered data 
         self.data = data
-        # locations to evaluate with gaussian process (instead of using grid)
-        self.locations = data[:,0:2]
         # self.server is the motion server for the robot
         self.server = ControlServer_palpation(amplitude,frequency, self.data)
         # self.number_of_data is the total number of data points
@@ -266,7 +264,6 @@ class gpr_palpation():
             run_time = rospy.Time.now().to_sec()
             offset_z = self.amp * math.sin(self.freq * run_time)
             translation[2] -= offset_z
-            print("translation",translation)
             which_tumor, euclid_norm, stiffness, tumor_or_not = calculate_stiffness(translation, self.dest_folder)[:]
             print("stiffness of new point:", stiffness)
             point_data = (translation[0],translation[1],translation[2], which_tumor, euclid_norm, stiffness, tumor_or_not)
@@ -279,22 +276,42 @@ class gpr_palpation():
             stiffness = np.array([stiffness])
 
         self.stiffnessCollected.append(stiffness.tolist())
-        print("All points probed:", self.probedPoints)
+        #print("All points probed:", self.probedPoints)
         #print("All stiffness collected:",self.stiffnessCollected)
         probedPoints_array = np.asarray(self.probedPoints)
         stiffnessCollected_array = np.asarray(self.stiffnessCollected)
         # minStiffness = np.min(stiffnessCollected_array)
         # stiffnessCollected_array = stiffnessCollected_array - minStiffness
         self.gp.fit(probedPoints_array, stiffnessCollected_array)
-        self.estimated_map['mean'], self.estimated_map['variance'] = self.gp.predict(self.locations, return_std=True)
+        self.estimated_map['mean'], self.estimated_map['variance'] = self.gp.predict(self.grid, return_std=True)
+        print("means:",self.estimated_map['mean'])
         self.estimated_map['mean'] -= np.min(stiffnessCollected_array)
         self.estimated_map['mean'][self.estimated_map['mean']<0] = 0
-        #print("mean", self.estimated_map['mean'])
         #print("mean", self.estimated_map['mean'].shape)
         #print("variance", self.estimated_map['variance'].shape)
 
         # shows the animation of the stiffness estimation
-        #self.visualize_map(title='Estimated map', figure=2, map=self.estimated_map['mean'], probed_points=probedPoints_array)
+        self.visualize_map(title='Estimated map', figure=2, map=self.estimated_map['mean'], probed_points=probedPoints_array)
+
+    def find_point_3d_index_from_2d(self, x_probed):
+        target_x, target_y= (x_probed[0],x_probed[1])
+        x_max = max(self.data[:,0])
+        x_min = min(self.data[:,0])
+        y_max = max(self.data[:,1])
+        y_min = min(self.data[:,1])
+
+        target_x = (target_x / self.domain['L1']) * (x_max - x_min) + x_min
+        target_y = (target_y / self.domain['L2']) * (y_max - y_min) + y_min
+        min_dis = float("inf")
+        index = 0
+        for i in range(self.number_of_data):
+            point_x = self.data[i][0]
+            point_y = self.data[i][1]
+            dis = (point_x - target_x) * (point_x - target_x) +  (point_x - target_x) * (point_x - target_x) 
+            if dis < min_dis and not self.data_probed[i]:
+                min_dis = dis
+                index = i
+        return index
 
     def nextBestPoint(self, alg):
         '''
@@ -302,13 +319,23 @@ class gpr_palpation():
         '''
         self.aquisitionFunciton = alg.aquisitionFunciton()
         indices = sorted(range(len(self.aquisitionFunciton)),reverse=True, key=lambda x: self.aquisitionFunciton[x])
-        #print(indices)
+        print("indices",indices)
         found_safe_point = False
         i=0
-        ind = indices[i]
-        while self.data_probed[ind] and i <= self.number_of_data:
-            i=i+1
+        while not found_safe_point:
             ind = indices[i]
+            x_probe = self.grid[ind,:]
+            dx = x_probe[0] - self.domain['L1']/2
+            dy = x_probe[1] - self.domain['L1']/2
+            r_squared = dx*dx+dy*dy
+            safety = 0.01 # some safety region away from boundary
+            r_max = self.domain['L1']/2 * (1 - safety) ## maximum allowed radius of the region to palpate in
+            ## maximum allowed radius of the region to palpate in
+            if r_squared < r_max*r_max:
+                found_safe_point = True
+                break
+            i=i+1
+        # ind = indices[i]
         return ind
    
     def autoPalpation(self, num_of_probes=-1):
@@ -334,9 +361,11 @@ class gpr_palpation():
                 self.ind = self.nextBestPoint(self.algorithm_class) #Here change which algorithm you want
         else:
             for i in range(num_of_probes):
-                x_probe = self.locations[self.ind]
-                print("Probing index:", self.ind)
-                self.probe(x_probe, self.ind)
+                #print('Probing point: '+str(i))
+                x_probe = self.grid[self.ind,:]
+                point_3d_index = self.find_point_3d_index_from_2d(x_probe)
+                print("Probing index:", point_3d_index)
+                self.probe(x_probe, point_3d_index)
                 self.ind = self.nextBestPoint(self.algorithm_class) #Here change which algorithm you want
 
                 # update output file after probing every N points
@@ -364,7 +393,7 @@ if __name__ == "__main__":
     amplitude = 0 #0.02
 
     rospy.init_node('gpr_python', anonymous=True)
-    gpr = gpr_palpation(data, frequency, amplitude, dest_folder, algorithm_name='UCB', visualize=False, simulation=False, wait_for_searching_signal = True) # 'LSE', 'EI', 'UCB'
+    gpr = gpr_palpation(data, frequency, amplitude, dest_folder, algorithm_name='UCB', visualize=False, simulation=True, wait_for_searching_signal = True) # 'LSE', 'EI', 'UCB'
 
     # visualize ground truth
     #gpr.visualize_map(map=gpr.groundTruth,title='Ground Truth', figure=1)
