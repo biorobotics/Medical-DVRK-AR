@@ -103,6 +103,7 @@ After launching Rviz, add in the following two rostopics to visualize the result
 9. Change the "size" to 0.0005, you should see the "red" tumor
 
 ## How to run smart palpation with gaussian process
+Please first install scikit-learn==0.20 (Previous version may not have the module we need)
 1. run roscore
 2. launch dvrk psm arm with command mentioned above
 3. run blaser_sim.py with command mentioned above
