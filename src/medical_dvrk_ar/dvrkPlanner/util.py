@@ -19,9 +19,9 @@ def estimation(data, amp, freq, sim_start_time, time):
     pose = np.array([data.p[0],data.p[1],data.p[2]])
     run_time = time - sim_start_time
     move = pose[2] + amp * math.sin(freq * run_time)
-
     estimated_point = PyKDL.Frame()
     estimated_point.p = PyKDL.Vector(pose[0], pose[1], move)
+    # print(estimated_point.p[2] == data.p[2])
     estimated_point.M = data.M
     return estimated_point
 
@@ -39,6 +39,22 @@ def estimation_numpy(data, amp, freq, sim_start_time, time):
     pose_Z = pose_z + amp * math.sin(freq * run_time)
     estimated_point = np.array([data[0], data[1], pose_Z])
     return estimated_point
+
+def estimation_reve_numpy(data, amp, freq, sim_start_time, time):
+    # Input:    1) data(numpy.array): point location
+    #           2) time: future time i
+    #           3) amp: amplitude of the motion
+    #           4) freq: frequency of the motion
+    #           5) sim_start_time: simulationn start time
+    #           6) time: future time
+    # Output:   1) pose(numpy.array): predicted point location
+    # this will return the starting position of a given point at given time
+
+    pose_z = data[2]
+    run_time = time - sim_start_time
+    pose_Z = pose_z - amp * math.sin(freq * run_time)
+    start_point = np.array([data[0], data[1], pose_Z])
+    return start_point
 
 def make_PyKDL_Frame(point):
     pykdl_point = PyKDL.Frame()

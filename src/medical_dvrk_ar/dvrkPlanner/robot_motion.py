@@ -8,7 +8,7 @@ from tf import TransformBroadcaster
 from geometry_msgs.msg import PoseStamped
 import os.path
 from scipy.spatial.transform import Rotation as R
-from util import estimation, make_PyKDL_Frame, estimation_numpy, nearest_point
+from util import estimation, make_PyKDL_Frame, estimation_numpy, nearest_point, estimation_reve_numpy
 
 functionPath = os.path.dirname(os.path.realpath(__file__))
 
@@ -203,7 +203,7 @@ class ControlServer_palpation(object):
             # compute the desired twist "x_dot" from motion command
             # print(desiredPose.p)
             desiredPose_move = estimation(desiredPose, self.amp, self.freq, 0, rospy.Time.now().to_sec())
-            # print(desiredPose_move.p)
+            # print(desiredPose_move.p[2] == desiredPose.p[2])
 
             desiredPosition = desiredPose_move.p - desiredPose_move.M.UnitZ()*self.toolOffset
             
@@ -218,11 +218,15 @@ class ControlServer_palpation(object):
             if xDotMotion.vel.Norm() <= 0.001 and xDotMotion.rot.Norm() <= 0.1:
                 break    
 
-            # calculate the surface at the next time step        
-            closest_point = nearest_point(np.array([desiredPose.p[0],desiredPose.p[1], desiredPose.p[2]]), self.data[:,:3])
+            # calculate the surface at the next time step   
+            static_point_height = estimation_reve_numpy(np.array([nextPose.p[0], nextPose.p[1], nextPose.p[2]]), self.amp, self.freq, 0, rospy.Time.now().to_sec())[2]
+            # print(static_point_height == nextPose.p[2])
+            closest_point = nearest_point(np.array([nextPose.p[0], nextPose.p[1], static_point_height]), self.data[:,:3])
             surface_height = estimation_numpy(closest_point, self.amp, self.freq, 0, rospy.Time.now().to_sec())[2]
+            
             if (nextPose.p[2] < surface_height):
-                nextPose.p[2] = surface_height + 0.01
+                nextPose.p[2] = surface_height + 1.5 * self.toolOffset
+            
             currentPose = nextPose
             self.robot.move(currentPose, interpolate = False)
             self.rate.sleep()
