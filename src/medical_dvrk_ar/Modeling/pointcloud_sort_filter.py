@@ -65,7 +65,7 @@ class filter_pointcloud_for_path_planner():
 
 
 		else:
-			cl, ind = self.raw_pcl_without_norm.remove_statistical_outlier(nb_neighbors=20, std_ratio=1.0)
+			cl, ind = o3d.geometry.statistical_outlier_removal(self.raw_pcl_without_norm, nb_neighbors=20, std_ratio=1.0)
 			if vis:
 				self.display_inlier_outlier(self.raw_pcl_without_norm, ind)
 
@@ -86,7 +86,7 @@ class filter_pointcloud_for_path_planner():
 			downpcd = o3d.geometry.PointCloud()
 			downpcd.points = o3d.utility.Vector3dVector(position)
 
-		downpcd.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=norm_est_radius, max_nn=50))
+		o3d.geometry.estimate_normals(downpcd, search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=norm_est_radius, max_nn=50))
 
 
 		position = np.asarray(downpcd.points)
@@ -151,7 +151,7 @@ class filter_pointcloud_for_path_planner():
 		ori_gridLeft = np.min(xArray)
 		ori_gridRight = np.min(xArray)+wGrid
 		halfXlist = []
-		for i in range(0, keepRows):
+		for i in range(0, self.keepRows):
 			xArray = pcArray[:, 0]
 			gridLeft = ori_gridLeft + i*wGrid
 			gridRight = ori_gridRight + (i+1)*wGrid
@@ -170,7 +170,7 @@ class filter_pointcloud_for_path_planner():
 		ori_gridDown = np.min(yArray)
 		ori_gridUp = np.min(yArray) + hGrid
 		halfYlist = []
-		for i in range(0, keepCols):
+		for i in range(0, self.keepCols):
 			yArray = pcArray[:, 1]
 			gridDown = ori_gridDown + i * hGrid
 			gridUp = ori_gridUp + (i + 1) * hGrid
@@ -410,7 +410,7 @@ class filter_pointcloud_for_path_planner():
 			self.Average2DGrid(vis=False)
 		self.sorted_poinst_with_xy_position(vis=True)
 
-		return my_filter.savefile()
+		return self.savefile()
 
 if __name__ == "__main__":
 

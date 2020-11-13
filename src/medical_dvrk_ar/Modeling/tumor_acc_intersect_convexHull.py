@@ -114,8 +114,8 @@ def compute_accuracy(ground_truth_stiffness, palpated_points):
 	palp_t3 = palpated_points[palpated_points[:,3] == 3,:2]
 
 	# Make convex hull of tumor1 palpated points
-	hull_palp_1 = ConvexHull(palp_t1)
-	hull_palp_1_vertices = hull_palp_1.points[hull_palp_1.vertices]
+	# hull_palp_1 = ConvexHull(palp_t1)
+	# hull_palp_1_vertices = hull_palp_1.points[hull_palp_1.vertices]
 
 	# Make convex hull of tumor2 palpated points
 	hull_palp_2 = ConvexHull(palp_t2)
