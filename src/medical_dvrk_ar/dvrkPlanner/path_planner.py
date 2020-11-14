@@ -65,7 +65,7 @@ class Task_Planner:
     # Exp: The main code runner.
     def run(self):
         # command the robot to home position
-        self.server.robot.home()
+        self.server.homing()
 
         # record the start time of the simulation
         self.sim_start_time = rospy.Time.now().to_sec()
@@ -106,9 +106,8 @@ class Task_Planner:
                 if self.cur_point >= self.number_of_data:
                     break
             break
-        return True
 
-
+        self.server.homing()
 
 
 if __name__=="__main__":

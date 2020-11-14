@@ -8,7 +8,7 @@ from tf import TransformBroadcaster
 from geometry_msgs.msg import PoseStamped
 import os.path
 from scipy.spatial.transform import Rotation as R
-from util import estimation, make_PyKDL_Frame, estimation_numpy, nearest_point
+from util import estimation, make_PyKDL_Frame, estimation_numpy, nearest_point, estimation_reve_numpy
 
 functionPath = os.path.dirname(os.path.realpath(__file__))
 
@@ -93,13 +93,17 @@ class ControlServer(object):
         self.toolOffset = 0.05
         self.amp = amplitude
         self.freq = frequency
+        #tested with API then copy and paste the value
+        self.home_pose = PyKDL.Frame()
+        self.home_pose.p = PyKDL.Vector(4.16909e-07, 4.50335e-07, -0.1135)
+        self.home_pose.M = PyKDL.Rotation(-2.69849e-11, 1, -9.91219e-17,1, 2.69849e-11,  7.34641e-06,7.34641e-06,  9.91194e-17,-1)
 
         # testing estimation
         self.start_time = rospy.Time.now().to_sec()
 
         # self.publisher is a publisher that publishes coordinates and rotation to the blaser sim
         self.pose_publisher = rospy.Publisher('EE_pose', PoseStamped, queue_size = 5)
-    
+
     def move(self,desiredPose, maxForce):
         # currentPose = self.robot.get_desired_position()
 
@@ -158,6 +162,11 @@ class ControlServer(object):
             currentPose = nextPose 
             self.robot.move(currentPose, interpolate = False)
             self.rate.sleep()
+    def homing(self):
+        self.move(self.home_pose, self.maxForce)
+
+        return
+
 class ControlServer_palpation(object):
     def __init__(self, amplitude, frequency,data):
 
@@ -190,6 +199,10 @@ class ControlServer_palpation(object):
         self.freq = frequency
         self.data = data
 
+        self.home_pose = PyKDL.Frame()
+        self.home_pose.p = PyKDL.Vector(4.16909e-07, 4.50335e-07, -0.1135)
+        self.home_pose.M = PyKDL.Rotation(-2.69849e-11, 1, -9.91219e-17,1, 2.69849e-11,  7.34641e-06,7.34641e-06,  9.91194e-17,-1)
+
         # testing estimation
         self.start_time = rospy.Time.now().to_sec()
 
@@ -197,13 +210,14 @@ class ControlServer_palpation(object):
     def move(self,desiredPose, maxForce):
         currentPose = self.robot.get_current_position()
         measuredPose_previous = self.robot.get_current_position()
-
+        count = 0
         while not rospy.is_shutdown():
+            count +=1
             # get current and desired robot pose (desired is the top of queue)
             # compute the desired twist "x_dot" from motion command
             # print(desiredPose.p)
             desiredPose_move = estimation(desiredPose, self.amp, self.freq, 0, rospy.Time.now().to_sec())
-            # print(desiredPose_move.p)
+            # print(desiredPose_move.p[2] == desiredPose.p[2])
 
             desiredPosition = desiredPose_move.p - desiredPose_move.M.UnitZ()*self.toolOffset
             
@@ -215,17 +229,25 @@ class ControlServer_palpation(object):
             nextPose = PyKDL.addDelta(currentPose,xDotMotion,self.resolvedRatesConfig['dt'])
             
 
-            if xDotMotion.vel.Norm() <= 0.001 and xDotMotion.rot.Norm() <= 0.1:
+            if (xDotMotion.vel.Norm() <= 0.002 and xDotMotion.rot.Norm() <= 0.1) or count > 20000:
                 break    
 
-            # calculate the surface at the next time step        
-            closest_point = nearest_point(np.array([desiredPose.p[0],desiredPose.p[1], desiredPose.p[2]]), self.data[:,:3])
+            # calculate the surface at the next time step   
+            static_point_height = estimation_reve_numpy(np.array([nextPose.p[0], nextPose.p[1], nextPose.p[2]]), self.amp, self.freq, 0, rospy.Time.now().to_sec())[2]
+            # print(static_point_height == nextPose.p[2])
+            closest_point = nearest_point(np.array([nextPose.p[0], nextPose.p[1], static_point_height]), self.data[:,:3])
             surface_height = estimation_numpy(closest_point, self.amp, self.freq, 0, rospy.Time.now().to_sec())[2]
+            
             if (nextPose.p[2] < surface_height):
-                nextPose.p[2] = surface_height
+                nextPose.p[2] = surface_height + self.toolOffset
+            
             currentPose = nextPose
             self.robot.move(currentPose, interpolate = False)
             self.rate.sleep()
+    def homing(self):
+        self.move(self.home_pose, self.maxForce)
+
+        return
 if __name__=="__main__":
     rospy.init_node('Control_server')
 

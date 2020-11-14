@@ -62,7 +62,7 @@ class Task_Planner_palpation:
         # self.output_nparray is the output file of the palpation
         self.output_nparray = [] 
         # self.threshold_stiffness is a threshold stiffness to skip points
-        self.threshold_stiffness = 0.5
+        self.threshold_stiffness = 0.1
         # self.skip_count how many points have been skipped consecutively
         self.skip_count = 0
         print('number of data', self.number_of_data)
@@ -73,7 +73,7 @@ class Task_Planner_palpation:
     # Exp: The main code runner.
     def run(self):
         # command the robot to home position
-        self.server.robot.home()
+        self.server.homing()
 
         # record the start time of the simulation
         self.sim_start_time = rospy.Time.now().to_sec()
@@ -105,24 +105,34 @@ class Task_Planner_palpation:
                 translation = [currentPose.p[0],currentPose.p[1],currentPose.p[2]]
                 #rotation = currentPose.M.GetQuaternion()
                 run_time = rospy.Time.now().to_sec()
-                offset_z = self.amp * math.sin(self.freq * run_time)
+                offset_z = amplitude * math.sin(frequency * run_time)
                 translation[2] -= offset_z
                 which_tumor, euclid_norm, stiffness, tumor_or_not = calculate_stiffness(translation, self.dest_folder)[:]
+                # stiffness += np.random.rand() * 0.01
                 print('stiffness',stiffness)
                 point_data = (translation[0],translation[1],translation[2], which_tumor, euclid_norm, stiffness, tumor_or_not)
                 self.output_nparray.append(point_data)
                 # naive approach to skip points during searching
+                print('skip count',self.skip_count)
+
                 if stiffness < self.threshold_stiffness:
                     self.skip_count +=1
                 else: 
-                    self.skip_count = 0
+                    self.skip_count = 1
 
-                if self.skip_count >= 5:
-                    itr +=4
-                elif self.skip_count >= 10:
-                    itr += 8
-                else:
-                    itr +=1
+                # if self.skip_count >= 5:
+                #     itr += 5
+                # elif self.skip_count >= 10:
+                #     itr += 10
+                # elif self.skip_count >= 30:
+                #     itr += 40
+                # elif self.skip_count >= 80:
+                #     itr += 100
+                # elif self.skip_count >= 200:
+                #     itr += 
+                # else:
+                #     itr +=1
+                itr += min(1500, self.skip_count)
 
                 # update output file every N points
                 update_rate = 10
@@ -135,6 +145,7 @@ class Task_Planner_palpation:
                     np.save(file_path+file_name, np.array(self.output_nparray))
                     break
             break
+        self.server.homing()
 
 
 
