@@ -17,8 +17,8 @@ file_path = "/home/anjalipemmaraju/catkin_ws/src/Medical-DVRK-AR/data/"
 # print("loading scanning path")
 # data = np.load(file_path+"scanning_path_200_points.npy")
 # # # turn this into argparse so that we can change amp and freq easily
-# amplitude = 0.02 #0.02
-# frequency = 0.5 #0.5
+amplitude = 0.02 #0.02
+frequency = 0.5 #0.5
 
 # finished = False
 
