@@ -8,7 +8,7 @@ import threading
 import numpy as np
 
 # im not sure if these are the right files right now because they're all named something different...
-file_path = "/home/anjalipemmaraju/catkin_ws/src/Medical-DVRK-AR/data/"
+file_path = "/home/cora/dvrk/src/Medical-DVRK-AR/data/"
 
 # print("loading stiffness data")
 # stiffnessMap = stiffnessMap(file_path+"xyz_for_stiffness_est.npy", 'h')

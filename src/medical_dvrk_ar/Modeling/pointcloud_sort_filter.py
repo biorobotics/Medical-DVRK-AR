@@ -62,12 +62,13 @@ class filter_pointcloud_for_path_planner():
 			self.raw_pcl_without_norm.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=norm_est_radius, max_nn=50))
 			downpcd = self.raw_pcl_without_norm.voxel_down_sample(voxel_size=dsample_voxelSize)
 			# downpcd = self.raw_pcl_without_norm
+		
 
 
 		else:
 			cl, ind = o3d.geometry.statistical_outlier_removal(self.raw_pcl_without_norm, nb_neighbors=20, std_ratio=1.0)
-			if vis:
-				self.display_inlier_outlier(self.raw_pcl_without_norm, ind)
+			# if vis:
+			# 	self.display_inlier_outlier(self.raw_pcl_without_norm, ind)
 
 			# get the np array version of the points
 			position = np.asarray(cl.points)
@@ -86,8 +87,19 @@ class filter_pointcloud_for_path_planner():
 			downpcd = o3d.geometry.PointCloud()
 			downpcd.points = o3d.utility.Vector3dVector(position)
 
+		
 		o3d.geometry.estimate_normals(downpcd, search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=norm_est_radius, max_nn=50))
 
+		# flip the normal vector z if z is bigger than zero
+		normals = np.asarray(downpcd.normals)
+		normal_vec_z = normals[:,-1]
+
+		print(normals)
+		print(normal_vec_z)
+		print(normal_vec_z>0)
+		
+		normals[normal_vec_z<0] *= -1
+		downpcd.normals = o3d.utility.Vector3dVector(normals)
 
 		position = np.asarray(downpcd.points)
 		# get the np array version of the normal
@@ -96,14 +108,14 @@ class filter_pointcloud_for_path_planner():
 		if vis:
 			o3d.visualization.draw_geometries([downpcd])
 
-		normals_outward = np.asarray(downpcd.normals)
-
 		# this is for the robot frame, the z will shift by 0.2
 		if self.isPly:
 			position[:,2] -= 0.2
 
 		# combine the position and norm
-		self.raw_pcl_with_raw_norm = np.concatenate((position, normals_outward),axis=1)
+		self.raw_pcl_with_raw_norm = np.concatenate((position, normals),axis=1)
+
+		print("self.raw_pcl_with_raw_norm.shape", self.raw_pcl_with_raw_norm.shape)
 		return self.raw_pcl_with_raw_norm
 
 	def filter_vector_with_angle_threshold(self, vis=False):
@@ -133,7 +145,7 @@ class filter_pointcloud_for_path_planner():
 
 		if vis:
 			pcd = o3d.geometry.PointCloud()
-			pcd.points = o3d.utility.Vector3dVector(self.sorted_pcl_with_filtered_norm[0:180,0:3])
+			pcd.points = o3d.utility.Vector3dVector(self.sorted_pcl_with_filtered_norm[:,0:3])
 			o3d.visualization.draw_geometries([pcd])
 
 	def Average2DGrid(self, vis=False):
@@ -401,13 +413,13 @@ class filter_pointcloud_for_path_planner():
 		if isPlyPath == True, raw_nby3_data should be in string data type
 		"""
 		self.loadData(raw_nby3_data, isPlyPath)
-		self.downsample_raw_pcl_get_normal_vector(vis=False)
-		self.filter_vector_with_angle_threshold(vis=False)
+		self.downsample_raw_pcl_get_normal_vector(vis=True)
+		self.filter_vector_with_angle_threshold(vis=True)
 		if isPlyPath==True:
-			self.removeoutlier(vis=False)
-			self.Downsample2DGrid(vis=False)
+			self.removeoutlier(vis=True)
+			self.Downsample2DGrid(vis=True)
 		if isPlyPath==False:
-			self.Average2DGrid(vis=False)
+			self.Average2DGrid(vis=True)
 		self.sorted_poinst_with_xy_position(vis=True)
 
 		return self.savefile()
