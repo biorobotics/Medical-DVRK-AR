@@ -34,6 +34,8 @@ class filter_pointcloud_for_path_planner():
 		# do we need to fix the blaser "two side" bug
 		self.connectivity_test = connectivity_test
 
+
+
 	def loadData(self, raw_data, isPlyPath):
 		self.isPly = isPlyPath
 		if isPlyPath:
@@ -163,7 +165,7 @@ class filter_pointcloud_for_path_planner():
 		ori_gridLeft = np.min(xArray)
 		ori_gridRight = np.min(xArray)+wGrid
 		halfXlist = []
-		for i in range(0, keepRows):
+		for i in range(0, self.keepRows):
 			xArray = pcArray[:, 0]
 			gridLeft = ori_gridLeft + i*wGrid
 			gridRight = ori_gridRight + (i+1)*wGrid
@@ -182,7 +184,7 @@ class filter_pointcloud_for_path_planner():
 		ori_gridDown = np.min(yArray)
 		ori_gridUp = np.min(yArray) + hGrid
 		halfYlist = []
-		for i in range(0, keepCols):
+		for i in range(0, self.keepCols):
 			yArray = pcArray[:, 1]
 			gridDown = ori_gridDown + i * hGrid
 			gridUp = ori_gridUp + (i + 1) * hGrid
@@ -338,13 +340,13 @@ class filter_pointcloud_for_path_planner():
 
 		ori_gridLeft = np.min(xArray)
 		halfXlist = []
-		for i in range(0, keepRows):
+		for i in range(0, self.keepRows):
 			gridLeft = ori_gridLeft + i * wGrid
 			halfXlist.append(gridLeft)
 
 		ori_gridDown = np.min(yArray)
 		halfYlist = []
-		for i in range(0, keepCols):
+		for i in range(0, self.keepCols):
 			gridDown = ori_gridDown + (i) * hGrid
 			halfYlist.append(gridDown)
 
@@ -499,31 +501,31 @@ class filter_pointcloud_for_path_planner():
 		if isPlyPath == True, raw_nby3_data should be in string data type
 		"""
 		self.loadData(raw_nby3_data, isPlyPath)
-		self.downsample_raw_pcl_get_normal_vector(vis=True)
-		self.filter_vector_with_angle_threshold(vis=True)
+		self.downsample_raw_pcl_get_normal_vector(vis=False)
+		self.filter_vector_with_angle_threshold(vis=False)
 		if isPlyPath==True:
-			self.removeoutlier(vis=True)
-			self.Downsample2DGrid(vis=True)
+			self.removeoutlier(vis=False)
+			self.Downsample2DGrid(vis=False)
 		if isPlyPath==False:
-			self.Average2DGrid(vis=True)
+			self.Average2DGrid(vis=False)
 		self.sorted_poinst_with_xy_position(vis=True)
 
 		return self.savefile()
 
 if __name__ == "__main__":
 
-	file_path = "/catkin_ws/src/Medical-DVRK-AR/data/"
+	file_path = "/home/cora/dvrk/src/Medical-DVRK-AR/data/"
 
 	# example of processing the blaser result
-	# blaser_data_name = "blaser_results_moving.npy"
-	# raw_data = np.load(file_path+blaser_data_name)
-	# max_angle = 60  # change  the param within [0,90)]
-	# keepRows = 36
-	# keepCols = 36
+	blaser_data_name = "blaser_results_moving.npy"
+	raw_data = np.load(file_path+blaser_data_name)
+	max_angle = 60  # change  the param within [0,90)]
+	keepRows = 36
+	keepCols = 36
 
-	# my_filter = filter_pointcloud_for_path_planner(max_angle, keepRows, keepCols, connectivity_test=True)
-	# a = my_filter.filter(raw_data, isPlyPath=False)
-	# np.save(file_path+"palpation_path_36cols_36rows.npy", a)
+	my_filter = filter_pointcloud_for_path_planner(max_angle, keepRows, keepCols, connectivity_test=True)
+	a = my_filter.filter(raw_data, isPlyPath=False)
+	np.save(file_path+"palpation_path_36cols_36rows.npy", a)
 
 
 	#  example of processing the ply file
