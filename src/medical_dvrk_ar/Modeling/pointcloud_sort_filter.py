@@ -514,10 +514,10 @@ class filter_pointcloud_for_path_planner():
 
 if __name__ == "__main__":
 
-	file_path = "/home/cora/dvrk/src/Medical-DVRK-AR/data/"
+	file_path = "/home/anjalipemmaraju/catkin_ws/src/Medical-DVRK-AR/data/"
 
 	# example of processing the blaser result
-	blaser_data_name = "blaser_results_moving.npy"
+	blaser_data_name = "blaser_results.npy"
 	raw_data = np.load(file_path+blaser_data_name)
 	max_angle = 60  # change  the param within [0,90)]
 	keepRows = 36
@@ -529,11 +529,11 @@ if __name__ == "__main__":
 
 
 	#  example of processing the ply file
-	CAD_data_name = "stl2.ply"
-	max_angle = 60  # change  the param within [0,90)]
-	keepRows = 10
-	keepCols = 20
-	my_filter = filter_pointcloud_for_path_planner(max_angle, keepRows, keepCols, connectivity_test=True)
-	a = my_filter.filter(file_path+CAD_data_name, isPlyPath=True)
-	print(a.shape)
-	np.save(file_path+"scanning_path_200_points.npy", a)
+	# CAD_data_name = "stl2.ply"
+	# max_angle = 60  # change  the param within [0,90)]
+	# keepRows = 10
+	# keepCols = 20
+	# my_filter = filter_pointcloud_for_path_planner(max_angle, keepRows, keepCols, connectivity_test=True)
+	# a = my_filter.filter(file_path+CAD_data_name, isPlyPath=True)
+	# print(a.shape)
+	# np.save(file_path+"scanning_path_200_points.npy", a)

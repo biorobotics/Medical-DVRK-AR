@@ -8,7 +8,7 @@ import threading
 import numpy as np
 
 # im not sure if these are the right files right now because they're all named something different...
-file_path = "/home/cora/dvrk/src/Medical-DVRK-AR/data/"
+file_path = "/home/anjalipemmaraju/catkin_ws/src/Medical-DVRK-AR/data/"
 
 # print("loading stiffness data")
 # stiffnessMap = stiffnessMap(file_path+"xyz_for_stiffness_est.npy", 'h')
@@ -28,16 +28,16 @@ frequency = 0.5 #0.5
 # print("finished scan")
 # # # open blaser results and do pointcloud palpation filter somehow
 
-print("processing blaser results")
-blaser_data_name = "blaser_results.npy"
-raw_data = np.load(file_path+blaser_data_name)
-max_angle = 60  # change  the param within [0,90)]
-keepRows = 50
-keepCols = 50
+# print("processing blaser results")
+# blaser_data_name = "blaser_results.npy"
+# raw_data = np.load(file_path+blaser_data_name)
+# max_angle = 60  # change  the param within [0,90)]
+# keepRows = 50
+# keepCols = 50
 
-my_filter = filter_pointcloud_for_path_planner(max_angle, keepRows, keepCols, connectivity_test=True)
-a = my_filter.filter(raw_data, isPlyPath=False)
-np.save(file_path+"palpation_path_36cols_36rows.npy", a)
+# my_filter = filter_pointcloud_for_path_planner(max_angle, keepRows, keepCols, connectivity_test=True)
+# a = my_filter.filter(raw_data, isPlyPath=False)
+# np.save(file_path+"palpation_path_36cols_36rows.npy", a)
 data = np.load(file_path + "palpation_path_36cols_36rows.npy")
 
 print("beginning palpation")
