@@ -34,6 +34,8 @@ class filter_pointcloud_for_path_planner():
 		# do we need to fix the blaser "two side" bug
 		self.connectivity_test = connectivity_test
 
+
+
 	def loadData(self, raw_data, isPlyPath):
 		self.isPly = isPlyPath
 		if isPlyPath:
@@ -62,12 +64,13 @@ class filter_pointcloud_for_path_planner():
 			self.raw_pcl_without_norm.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=norm_est_radius, max_nn=50))
 			downpcd = self.raw_pcl_without_norm.voxel_down_sample(voxel_size=dsample_voxelSize)
 			# downpcd = self.raw_pcl_without_norm
+		
 
 
 		else:
 			cl, ind = o3d.geometry.statistical_outlier_removal(self.raw_pcl_without_norm, nb_neighbors=20, std_ratio=1.0)
-			if vis:
-				self.display_inlier_outlier(self.raw_pcl_without_norm, ind)
+			# if vis:
+			# 	self.display_inlier_outlier(self.raw_pcl_without_norm, ind)
 
 			# get the np array version of the points
 			position = np.asarray(cl.points)
@@ -86,8 +89,19 @@ class filter_pointcloud_for_path_planner():
 			downpcd = o3d.geometry.PointCloud()
 			downpcd.points = o3d.utility.Vector3dVector(position)
 
+		
 		o3d.geometry.estimate_normals(downpcd, search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=norm_est_radius, max_nn=50))
 
+		# flip the normal vector z if z is bigger than zero
+		normals = np.asarray(downpcd.normals)
+		normal_vec_z = normals[:,-1]
+
+		print(normals)
+		print(normal_vec_z)
+		print(normal_vec_z>0)
+		
+		normals[normal_vec_z<0] *= -1
+		downpcd.normals = o3d.utility.Vector3dVector(normals)
 
 		position = np.asarray(downpcd.points)
 		# get the np array version of the normal
@@ -96,14 +110,14 @@ class filter_pointcloud_for_path_planner():
 		if vis:
 			o3d.visualization.draw_geometries([downpcd])
 
-		normals_outward = np.asarray(downpcd.normals)
-
 		# this is for the robot frame, the z will shift by 0.2
 		if self.isPly:
 			position[:,2] -= 0.2
 
 		# combine the position and norm
-		self.raw_pcl_with_raw_norm = np.concatenate((position, normals_outward),axis=1)
+		self.raw_pcl_with_raw_norm = np.concatenate((position, normals),axis=1)
+
+		print("self.raw_pcl_with_raw_norm.shape", self.raw_pcl_with_raw_norm.shape)
 		return self.raw_pcl_with_raw_norm
 
 	def filter_vector_with_angle_threshold(self, vis=False):
@@ -133,7 +147,7 @@ class filter_pointcloud_for_path_planner():
 
 		if vis:
 			pcd = o3d.geometry.PointCloud()
-			pcd.points = o3d.utility.Vector3dVector(self.sorted_pcl_with_filtered_norm[0:180,0:3])
+			pcd.points = o3d.utility.Vector3dVector(self.sorted_pcl_with_filtered_norm[:,0:3])
 			o3d.visualization.draw_geometries([pcd])
 
 	def Average2DGrid(self, vis=False):
@@ -143,7 +157,7 @@ class filter_pointcloud_for_path_planner():
 		yArray = pcArray[:,1]
 
 		width = np.max(xArray) - np.min(xArray)
-		height = np.max(yArray) - np.min(yArray)
+		height = np.max(yArray)  - np.min(yArray)
 		wGrid = width/self.keepRows
 		hGrid = height/self.keepCols
 
@@ -185,11 +199,11 @@ class filter_pointcloud_for_path_planner():
 			newArray = np.concatenate((newArray, appendArray), axis=0)
 		pcArray = newArray
 
-		newArray = np.empty((0, 6))
+		newArray = np.empty((0, 8))
 
 		for idx_x, x in enumerate(halfXlist):
-			points_in_a_row = np.empty((0, 6))
-			for y in halfYlist:
+			points_in_a_row = np.empty((0, 8))
+			for idx_y, y in enumerate(halfYlist):
 				sum_z = 0
 				points_num = 0
 				sum_norm = np.array([0,0,0])
@@ -202,7 +216,6 @@ class filter_pointcloud_for_path_planner():
 						sum_norm = np.add(sum_norm,norm)
 						points_num+=1
 
-
 						# print ("The {}th point z is {}".format(points_num,z))
 				if (points_num == 0):
 					continue
@@ -210,14 +223,25 @@ class filter_pointcloud_for_path_planner():
 					z = sum_z/points_num
 					# print("In total the sum of {} point z is {}, so the new z is {}".format(points_num, sum_z, z))
 					norm = sum_norm/points_num
-					appendArray = np.array([[x,y,z,norm[0],norm[1],norm[2]]])
+					appendArray = np.array([[x,y,z,norm[0],norm[1],norm[2],idx_x,idx_y]])
 
 					points_in_a_row = np.concatenate((points_in_a_row, appendArray), axis=0)
 
-			if (idx_x%2==0):
-				newArray = np.concatenate((newArray, points_in_a_row), axis=0)
-			else:
-				newArray = np.concatenate((newArray, points_in_a_row[::-1]), axis=0)
+			newArray = np.concatenate((newArray, points_in_a_row), axis=0)
+			# if (idx_x%2==0):
+			# 	newArray = np.concatenate((newArray, points_in_a_row), axis=0)
+			# 	newHalfIdxArray = np.concatenate((newHalfIdxArray, hashmap_in_a_row), axis=0)
+			# else:
+			# 	newArray = np.concatenate((newArray, points_in_a_row[::-1]), axis=0)
+			# 	newHalfIdxArray = np.concatenate((newHalfIdxArray, hashmap_in_a_row[::-1]), axis=0)
+
+		# interpolate the points to make it more dense
+		# double the density!
+		newArray = self.interpolatePCL(xyznormHashmap=newArray)
+		# double the density again!
+		newArray = self.interpolatePCL(xyznormHashmap=newArray)
+
+		newArray = self.makePointsAsnake(xyznormHashmap=newArray)[:,:-2]
 
 		pcArray = newArray
 		if vis:
@@ -226,6 +250,82 @@ class filter_pointcloud_for_path_planner():
 			o3d.visualization.draw_geometries([pcd])
 
 		self.raw_pcl_with_filtered_norm = pcArray
+
+	def interpolatePCL(self, xyznormHashmap):
+		xyznormHashmap[:, -2:] *= 2
+		hashmap = xyznormHashmap[:, -2:]
+		col_min = np.min(hashmap[:, -1])
+		col_max = np.max(hashmap[:, -1])
+		# insert points between two points in a row
+		for existing_pts_idx in hashmap:
+			# find the point by x,y harsh map
+			rowidx_to_insert_after = np.where(np.multiply((xyznormHashmap[:, -1] == existing_pts_idx[1]),
+														  (xyznormHashmap[:, -2] == existing_pts_idx[0])))
+			# turn the one element array to int
+			rowidx_to_insert_after = rowidx_to_insert_after[0]
+
+			# if it's not the last point
+			if (rowidx_to_insert_after < (xyznormHashmap.shape[0] - 1)):
+
+				# if it's a new row with different y value in hashmap, insert a new line
+				if (xyznormHashmap[rowidx_to_insert_after + 1][0][-2] != xyznormHashmap[rowidx_to_insert_after][0][-2]):
+					# copy the data to a new row
+					insert_row = np.zeros((int(col_max - col_min), 8))
+					insert_row[:, -2] = xyznormHashmap[rowidx_to_insert_after][0][-2] + 1
+					insert_row[:, -1] = np.arange(col_min, col_max)
+					xyznormHashmap = np.insert(xyznormHashmap, rowidx_to_insert_after + 1, insert_row, axis=0)
+
+				else:
+					# insert a point after the point if its not a new line
+					newpt = (xyznormHashmap[rowidx_to_insert_after] + xyznormHashmap[rowidx_to_insert_after + 1]) / 2
+					xyznormHashmap = np.insert(xyznormHashmap, rowidx_to_insert_after + 1, newpt, axis=0)
+
+		# for insert rows between rows
+
+		for i, pts in enumerate(xyznormHashmap):
+			# we only need to assign the odd number rows which we just created
+			if (pts[-2] % 2 == 1):
+				# if there is a left point exist and right point exist, this point should be their average
+				left_pt_hash = np.array([pts[-2] - 1, pts[-1]])
+				right_pt_hash = np.array([pts[-2] + 1, pts[-1]])
+
+				left_pt_row_idx = np.where(
+					np.multiply((xyznormHashmap[:, -1] == left_pt_hash[1]), (xyznormHashmap[:, -2] == left_pt_hash[0])))
+				left_pt_exist = len(left_pt_row_idx[0])
+				right_pt_row_idx = np.where(np.multiply((xyznormHashmap[:, -1] == right_pt_hash[1]),
+														(xyznormHashmap[:, -2] == right_pt_hash[0])))
+				right_pt_exist = len(right_pt_row_idx[0])
+
+				if (left_pt_exist) and (right_pt_exist):
+					xyznormHashmap[i, :-2] = (xyznormHashmap[left_pt_row_idx, :-2] + xyznormHashmap[right_pt_row_idx,
+																					 :-2]) / 2
+
+		# if there is no left or right point just delete it
+
+		xyznormHashmap = np.delete(xyznormHashmap, np.where(xyznormHashmap[:, 0] == 0), axis=0)
+
+		return xyznormHashmap
+
+	def makePointsAsnake(self, xyznormHashmap):
+		start_x_hash_idx = 0
+		end_x_hash_idx = 0
+		current_mark = xyznormHashmap[0][6]
+		length = len(xyznormHashmap)
+		for i, pts in enumerate(xyznormHashmap):
+			if pts[6] == current_mark:
+				end_x_hash_idx = i
+			else:
+				end_x_hash_idx = i
+				if pts[6] % 2 == 0:
+					# print(current_mark, ' ', start_x_hash_idx, ' ', end_x_hash_idx)
+					xyznormHashmap[start_x_hash_idx: end_x_hash_idx] = xyznormHashmap[start_x_hash_idx: end_x_hash_idx][
+																	   ::-1]
+				start_x_hash_idx = i
+				current_mark = pts[6]
+			if i == length - 1:
+				if pts[6] % 2 == 0:
+					xyznormHashmap[start_x_hash_idx: i + 1] = xyznormHashmap[start_x_hash_idx: i + 1][::-1]
+		return xyznormHashmap
 
 	def Downsample2DGrid(self, vis=False):
 		pcArray = np.asarray(self.raw_pcl_with_filtered_norm)
@@ -240,13 +340,13 @@ class filter_pointcloud_for_path_planner():
 
 		ori_gridLeft = np.min(xArray)
 		halfXlist = []
-		for i in range(0, keepRows):
+		for i in range(0, self.keepRows):
 			gridLeft = ori_gridLeft + i * wGrid
 			halfXlist.append(gridLeft)
 
 		ori_gridDown = np.min(yArray)
 		halfYlist = []
-		for i in range(0, keepCols):
+		for i in range(0, self.keepCols):
 			gridDown = ori_gridDown + (i) * hGrid
 			halfYlist.append(gridDown)
 
@@ -414,18 +514,18 @@ class filter_pointcloud_for_path_planner():
 
 if __name__ == "__main__":
 
-	file_path = "/catkin_ws/src/Medical-DVRK-AR/data/"
+	file_path = "/home/cora/dvrk/src/Medical-DVRK-AR/data/"
 
 	# example of processing the blaser result
-	# blaser_data_name = "blaser_results_moving.npy"
-	# raw_data = np.load(file_path+blaser_data_name)
-	# max_angle = 60  # change  the param within [0,90)]
-	# keepRows = 36
-	# keepCols = 36
+	blaser_data_name = "blaser_results_moving.npy"
+	raw_data = np.load(file_path+blaser_data_name)
+	max_angle = 60  # change  the param within [0,90)]
+	keepRows = 36
+	keepCols = 36
 
-	# my_filter = filter_pointcloud_for_path_planner(max_angle, keepRows, keepCols, connectivity_test=True)
-	# a = my_filter.filter(raw_data, isPlyPath=False)
-	# np.save(file_path+"palpation_path_36cols_36rows.npy", a)
+	my_filter = filter_pointcloud_for_path_planner(max_angle, keepRows, keepCols, connectivity_test=True)
+	a = my_filter.filter(raw_data, isPlyPath=False)
+	np.save(file_path+"palpation_path_36cols_36rows.npy", a)
 
 
 	#  example of processing the ply file
