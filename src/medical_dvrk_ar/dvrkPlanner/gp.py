@@ -7,6 +7,7 @@ from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
 from scipy.stats import multivariate_normal, norm
 from scipy.interpolate import griddata
 import PIL
+import time
 
 import rospy
 from sensor_msgs.msg import Image
@@ -127,11 +128,7 @@ class gpr_palpation():
 
         self.rate = rospy.Rate(10) #1000
         self.visualize = visualize
-
-        self.ind = np.random.randint(0,self.domain['L1'] * self.domain['L2'])
-        #self.ind = 7050
-
-        self.predict_period = 100
+    
         # self.sim_start_time is the start time (ros time) of the simulation
         self.sim_start_time = None
         # self.freq is the estimated frequency of the liver
@@ -142,16 +139,20 @@ class gpr_palpation():
         self.data = data
         # locations to evaluate with gaussian process (instead of using grid)
         self.locations = data[:,0:2]
+        self.x_span  = self.locations[:,0].max() - self.locations[:,0].min()
+        self.y_span = self.locations[:,1].max() - self.locations[:,1].min()
         # self.server is the motion server for the robot
         self.server = ControlServer_palpation(amplitude,frequency, self.data)
         # self.number_of_data is the total number of data points
         self.number_of_data = data.shape[0]
-        # self.data_probed record whether a point has been probed
-        self.data_probed = np.zeros(data.shape[0])
+        self.ind = np.random.randint(0,self.number_of_data)
+        # self.data_not_probed record whether a point has been probed, not probed with 1, probed with 0
+        self.data_not_probed = np.ones(data.shape[0])
         # self.output_nparray is the output file of the palpation
         self.output_nparray = [] 
         print('number of data', self.number_of_data)
         self.dest_folder = dest_folder
+        self.local_poke_times = 0
        
 
     def chooseAlgorithm(self, algorithm_name):
@@ -256,7 +257,7 @@ class gpr_palpation():
 
         else: 
             ##### motion compensation
-            self.data_probed[point_index] = 1
+            self.data_not_probed[point_index] = 0
             dest = make_PyKDL_Frame(self.data[point_index])
             self.server.move(dest, self.server.maxForce)
             # append current pose data
@@ -266,7 +267,6 @@ class gpr_palpation():
             run_time = rospy.Time.now().to_sec()
             offset_z = self.amp * math.sin(self.freq * run_time)
             translation[2] -= offset_z
-            print("translation",translation)
             which_tumor, euclid_norm, stiffness, tumor_or_not = calculate_stiffness(translation, self.dest_folder)[:]
             print("stiffness of new point:", stiffness)
             point_data = (translation[0],translation[1],translation[2], which_tumor, euclid_norm, stiffness, tumor_or_not)
@@ -279,7 +279,7 @@ class gpr_palpation():
             stiffness = np.array([stiffness])
 
         self.stiffnessCollected.append(stiffness.tolist())
-        print("All points probed:", self.probedPoints)
+        #print("All points probed:", self.probedPoints)
         #print("All stiffness collected:",self.stiffnessCollected)
         probedPoints_array = np.asarray(self.probedPoints)
         stiffnessCollected_array = np.asarray(self.stiffnessCollected)
@@ -301,14 +301,30 @@ class gpr_palpation():
         Takes in a funciton to estimate next best point accordingly. For now it supports 'EI' and 'UCB'
         '''
         self.aquisitionFunciton = alg.aquisitionFunciton()
-        indices = sorted(range(len(self.aquisitionFunciton)),reverse=True, key=lambda x: self.aquisitionFunciton[x])
-        #print(indices)
-        found_safe_point = False
+        indices = np.array(sorted(range(len(self.aquisitionFunciton)),reverse=True, key=lambda x: self.aquisitionFunciton[x]))
+        indices = indices[np.array(np.nonzero(self.data_not_probed)[0],dtype=int)]
+        thresh = 100
+        dis = np.linalg.norm(self.locations[indices[:thresh],:] - self.locations[self.ind,:],axis=-1)
+
+        if np.min(dis) < min(self.x_span, self.y_span) / 5:
+            ind = indices[np.argmin(dis)]
+            self.local_poke_times += 1
+            if self.local_poke_times == 50:
+                self.local_poke_times = 0 
+                print("............Start more exploration............")
+                ind = indices[np.random.randint(0,len(indices))]
+        else:
+            dis = np.linalg.norm(self.locations - self.locations[self.ind,:],axis=-1)
+            ind =indices[np.array(np.nonzero(dis < (min(self.x_span, self.y_span) / 5))[0])[0]]
+            self.local_poke_times = 0
+
+        """
         i=0
         ind = indices[i]
-        while self.data_probed[ind] and i <= self.number_of_data:
+        while i <= self.number_of_data and (not self.data_not_probed[ind] or np.abs(self.ind - ind) > 400):
             i=i+1
             ind = indices[i]
+        """
         return ind
    
     def autoPalpation(self, num_of_probes=-1):
@@ -333,20 +349,34 @@ class gpr_palpation():
                 self.probe(x_probe,self.ind)
                 self.ind = self.nextBestPoint(self.algorithm_class) #Here change which algorithm you want
         else:
-            for i in range(num_of_probes):
+            
+            num_burn_in = 20
+            print("............Phase 1: Random exploration............")
+            for i in range(num_burn_in):
+                self.ind = np.random.randint(0,self.number_of_data)
+                while not self.data_not_probed[self.ind]:
+                    self.ind = np.random.randint(0,self.number_of_data)
+                x_probe = self.locations[self.ind]
+                print("Probing index:", self.ind)
+                self.probe(x_probe, self.ind)
+
+            print("............Phase 2: Fine grained exploration............")
+            for i in range(num_of_probes-num_burn_in):
+                file_path = self.dest_folder + "/"
+                file_name_time = "palpation_time_" + str(i+num_burn_in) + "pokings.npy"
+                file_name = "palpation_result_" + str(i+num_burn_in) + "pokings.npy"
+                if (i + num_burn_in) % 50 == 0:
+                    print("............."+str(i+num_burn_in) + "pokes finished!.............")
+                    np.save(file_path+file_name_time, time.time()-start_time)
+                    np.save(file_path+file_name, np.array(self.output_nparray))
+
                 x_probe = self.locations[self.ind]
                 print("Probing index:", self.ind)
                 self.probe(x_probe, self.ind)
                 self.ind = self.nextBestPoint(self.algorithm_class) #Here change which algorithm you want
 
-                # update output file after probing every N points
-                update_rate = 10
-                file_path = self.dest_folder + "/"
-                file_name = "palpation_result.npy"
-                if i % update_rate == 0:
-                    np.save(file_path+file_name, np.array(self.output_nparray))
-                # break if reach the end of the list
-                if i >= num_of_probes-1:
+                if i == num_of_probes-num_burn_in-1:
+                    np.save(file_path+file_name_time, time.time()-start_time)
                     np.save(file_path+file_name, np.array(self.output_nparray))
                     break
 
@@ -360,15 +390,18 @@ if __name__ == "__main__":
     file_path = args.path
     dest_folder = args.dest
     data = np.load(file_path)
-    frequency = 0 #0.5
-    amplitude = 0 #0.02
+    frequency = 0.5 #0.5
+    amplitude = 0.02  #0.02
+    np.random.seed(int(time.time())) 
 
+    global start_time
+    start_time = time.time()
     rospy.init_node('gpr_python', anonymous=True)
     gpr = gpr_palpation(data, frequency, amplitude, dest_folder, algorithm_name='UCB', visualize=False, simulation=False, wait_for_searching_signal = True) # 'LSE', 'EI', 'UCB'
 
     # visualize ground truth
     #gpr.visualize_map(map=gpr.groundTruth,title='Ground Truth', figure=1)
-    gpr.autoPalpation(100)
+    gpr.autoPalpation(400)
 
     
 # plt.show()
