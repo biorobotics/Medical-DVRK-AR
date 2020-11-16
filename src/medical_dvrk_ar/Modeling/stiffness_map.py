@@ -135,7 +135,7 @@ class stiffnessMap:
 		self.point_stiff = np.append(self.point_stiff, self.stiffNormalized, axis = 1)
 		# Append array that says whether a given point is part of a tumor or not
 		self.point_stiff = np.append(self.point_stiff, self.stiffness, axis = 1)
-		np.save('/home/anjalipemmaraju/catkin_ws/src/Medical-DVRK-AR/data/points_with_stiffness.npy', self.point_stiff)
+		np.save('../../../data/points_with_stiffness.npy', self.point_stiff)
 
 	
 	def visualizeStiffness(self):
