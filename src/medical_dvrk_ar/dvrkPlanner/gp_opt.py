@@ -385,7 +385,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='read the point cloud data for palpation')
     parser.add_argument('--path',help='the path to the palpation npy file')
     parser.add_argument('--dest', help = 'which folder to store the file')
-    parse.add_argument('--num_pokes', help ='how many number of pokes')
+    parser.add_argument('--num_pokes', help ='how many number of pokes')
     args = parser.parse_args()
 
     file_path = args.path
