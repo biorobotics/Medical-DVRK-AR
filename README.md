@@ -30,6 +30,7 @@ $ git clone https://github.com/biorobotics/Medical-DVRK-AR.git
 $ cd ~/catkin_ws
 $ catkin build
 ```
+3. install open3d version 0.7.0
 ## Structure
 ```
 your_workspace/
