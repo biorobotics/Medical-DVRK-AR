@@ -142,7 +142,7 @@ class gpr_palpation():
         self.x_span  = self.locations[:,0].max() - self.locations[:,0].min()
         self.y_span = self.locations[:,1].max() - self.locations[:,1].min()
         # self.server is the motion server for the robot
-        self.server = ControlServer_palpation(amplitude,frequency, self.data)
+        self.server = ControlServer_palpation(amplitude, frequency, self.data)
         # self.number_of_data is the total number of data points
         self.number_of_data = data.shape[0]
         self.ind = np.random.randint(0,self.number_of_data)
@@ -279,7 +279,7 @@ class gpr_palpation():
             stiffness = np.array([stiffness])
 
         self.stiffnessCollected.append(stiffness.tolist())
-        #print("All points probed:", self.probedPoints)
+
         #print("All stiffness collected:",self.stiffnessCollected)
         probedPoints_array = np.asarray(self.probedPoints)
         stiffnessCollected_array = np.asarray(self.stiffnessCollected)
@@ -309,7 +309,7 @@ class gpr_palpation():
         if np.min(dis) < min(self.x_span, self.y_span) / 5:
             ind = indices[np.argmin(dis)]
             self.local_poke_times += 1
-            if self.local_poke_times == 50:
+            if self.local_poke_times == 20:
                 self.local_poke_times = 0 
                 print("............Start more exploration............")
                 ind = indices[np.random.randint(0,len(indices))]
@@ -385,10 +385,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='read the point cloud data for palpation')
     parser.add_argument('--path',help='the path to the palpation npy file')
     parser.add_argument('--dest', help = 'which folder to store the file')
+    parse.add_argument('--num_pokes', help ='how many number of pokes')
     args = parser.parse_args()
 
     file_path = args.path
     dest_folder = args.dest
+    num_pokes = args.num_pokes
     data = np.load(file_path)
     frequency = 0.5 #0.5
     amplitude = 0.02  #0.02
@@ -401,7 +403,7 @@ if __name__ == "__main__":
 
     # visualize ground truth
     #gpr.visualize_map(map=gpr.groundTruth,title='Ground Truth', figure=1)
-    gpr.autoPalpation(400)
+    gpr.autoPalpation(num_pokes)
 
     
 # plt.show()
