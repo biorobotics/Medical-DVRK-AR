@@ -12,7 +12,7 @@ import time
 
 start_time = time.time()
 # im not sure if these are the right files right now because they're all named something different...
-file_path = "/home/chang/catkin_ws/src/Medical-DVRK-AR/data/"
+file_path = "/home/alex/MRSD_sim/src/Medical-DVRK-AR/data"
 
 print("loading stiffness data")
 stiffnessMap = stiffnessMap(file_path+"xyz_for_stiffness_est.npy", 'h')
