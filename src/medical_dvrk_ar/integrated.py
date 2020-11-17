@@ -17,6 +17,8 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser(description='data folder')
     parser.add_argument('--path',help='the path to the data folder')
     parser.add_argument('--method', help = 'which palpation method to use')
+    parser.add_argument('--amp', help = 'what amplitude to use')
+    parser.add_argument('--freq', help = 'what frequency to use')
     args = parser.parse_args()
 
     start_time = time.time()
@@ -31,8 +33,8 @@ if __name__=="__main__":
     print("loading scanning path")
     data = np.load(file_path+"scanning_path_200_points.npy")
     # # turn this into argparse so that we can change amp and freq easily
-    amplitude = 0.02 #0.02
-    frequency = 0.5 #0.5
+    amplitude = args.amp #0.02
+    frequency = args.freq #0.5
 
     finished = False
 
