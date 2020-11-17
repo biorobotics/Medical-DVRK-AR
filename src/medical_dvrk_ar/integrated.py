@@ -2,13 +2,15 @@ from Modeling.pointcloud_sort_filter import filter_pointcloud_for_path_planner
 from Modeling.stiffness_map import stiffnessMap
 from dvrkPlanner.path_planner import Task_Planner
 from dvrkPlanner.path_planner_palpation import Task_Planner_palpation
+from dvrkPlanner.gp import *
 from Modeling.tumor_acc_intersect_convexHull import compute_accuracy
 
 import threading
 import numpy as np
+import rospy
 
 # im not sure if these are the right files right now because they're all named something different...
-file_path = "/home/anjalipemmaraju/catkin_ws/src/Medical-DVRK-AR/data/"
+file_path = "/home/chang/catkin_ws/src/Medical-DVRK-AR/data/"
 
 print("loading stiffness data")
 stiffnessMap = stiffnessMap(file_path+"xyz_for_stiffness_est.npy", 'h')
@@ -41,9 +43,11 @@ np.save(file_path+"palpation_path_testing.npy", a)
 data = np.load(file_path + "palpation_path_testing.npy")
 
 print("beginning palpation")
-planner = Task_Planner_palpation(data, frequency, amplitude, file_path)
-planner.run()
-
+#planner = Task_Planner_palpation(data, frequency, amplitude, file_path)
+#planner.run()
+rospy.init_node('gpr_python', anonymous=True)
+gpr = gpr_palpation(data, frequency, amplitude, file_path, algorithm_name='UCB', visualize=False, simulation=False, wait_for_searching_signal = True) # 'LSE', 'EI', 'UCB'
+gpr.autoPalpation(100)
 
 ground_truth_stiffness = np.load('../../data/points_with_stiffness.npy')
 print(ground_truth_stiffness.shape)
