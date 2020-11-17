@@ -171,6 +171,7 @@ class ControlServer_palpation(object):
     def __init__(self, amplitude, frequency,data):
 
         self.robot = psm('PSM1')
+        self.robot.home()
 
         rate = 1000.0
         # TODO make these values not hard coded
@@ -194,7 +195,7 @@ class ControlServer_palpation(object):
         self.maxForce = 1500 # Not sure of this?
         self.safeZ = .05 # Safe height above organ in meters
         self.normalDistance = 0.005 # Meters
-        self.toolOffset = 0.01
+        self.toolOffset = 0.01 
         self.amp = amplitude
         self.freq = frequency
         self.data = data
@@ -239,7 +240,7 @@ class ControlServer_palpation(object):
             surface_height = estimation_numpy(closest_point, self.amp, self.freq, 0, rospy.Time.now().to_sec())[2]
             
             if (nextPose.p[2] < surface_height):
-                nextPose.p[2] = surface_height + self.toolOffset
+                nextPose.p[2] = surface_height  + self.toolOffset
             
             currentPose = nextPose
             self.robot.move(currentPose, interpolate = False)

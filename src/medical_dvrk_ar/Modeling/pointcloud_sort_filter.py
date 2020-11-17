@@ -96,9 +96,9 @@ class filter_pointcloud_for_path_planner():
 		normals = np.asarray(downpcd.normals)
 		normal_vec_z = normals[:,-1]
 
-		print(normals)
-		print(normal_vec_z)
-		print(normal_vec_z>0)
+		#print(normals)
+		#print(normal_vec_z)
+		#print(normal_vec_z>0)
 		
 		normals[normal_vec_z<0] *= -1
 		downpcd.normals = o3d.utility.Vector3dVector(normals)
@@ -117,7 +117,7 @@ class filter_pointcloud_for_path_planner():
 		# combine the position and norm
 		self.raw_pcl_with_raw_norm = np.concatenate((position, normals),axis=1)
 
-		print("self.raw_pcl_with_raw_norm.shape", self.raw_pcl_with_raw_norm.shape)
+		#print("self.raw_pcl_with_raw_norm.shape", self.raw_pcl_with_raw_norm.shape)
 		return self.raw_pcl_with_raw_norm
 
 	def filter_vector_with_angle_threshold(self, vis=False):
@@ -201,6 +201,7 @@ class filter_pointcloud_for_path_planner():
 
 		newArray = np.empty((0, 8))
 
+		print("Smoothing the surface......")
 		for idx_x, x in enumerate(halfXlist):
 			points_in_a_row = np.empty((0, 8))
 			for idx_y, y in enumerate(halfYlist):
@@ -237,10 +238,13 @@ class filter_pointcloud_for_path_planner():
 
 		# interpolate the points to make it more dense
 		# double the density!
-		newArray = self.interpolatePCL(xyznormHashmap=newArray)
-		# double the density again!
-		newArray = self.interpolatePCL(xyznormHashmap=newArray)
-
+		
+		#print(newArray.shape)
+		#newArray = self.interpolatePCL(xyznormHashmap=newArray)
+		#print("Interpolating surface point data......")
+		#print("Number of points after interpolation:", newArray.shape[0])
+		## double the density again!
+		#newArray = self.interpolatePCL(xyznormHashmap=newArray)
 		newArray = self.makePointsAsnake(xyznormHashmap=newArray)[:,:-2]
 
 		pcArray = newArray
@@ -248,7 +252,7 @@ class filter_pointcloud_for_path_planner():
 			pcd = o3d.geometry.PointCloud()
 			pcd.points = o3d.utility.Vector3dVector(pcArray[:,0:3])
 			o3d.visualization.draw_geometries([pcd])
-
+		print("here")
 		self.raw_pcl_with_filtered_norm = pcArray
 
 	def interpolatePCL(self, xyznormHashmap):

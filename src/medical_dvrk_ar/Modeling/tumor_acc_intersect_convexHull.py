@@ -5,6 +5,7 @@ from matplotlib import pyplot as plt
 from mpl_toolkits import mplot3d
 from scipy.spatial import ConvexHull
 import math
+from bounding_circle import make_circle
 
 # Reference: https://github.com/zaiweizhang/H3DNet/blob/master/utils/box_util.py
 def polygon_clip(subjectPolygon, clipPolygon):
@@ -82,26 +83,35 @@ def compute_accuracy(ground_truth_stiffness, palpated_points):
 	points_gt3 = ground_truth_stiffness[ground_truth_stiffness[:,3] == 3,:2]
 
 	# Make convex hull of tumor1 ground truth points
-	hull_gt_1 = ConvexHull(points_gt1)
-	hull_gt1_vertices = hull_gt_1.points[hull_gt_1.vertices]
+	if len(points_gt1) != 0:
+		hull_gt_1 = ConvexHull(points_gt1)
+		hull_gt1_vertices = hull_gt_1.points[hull_gt_1.vertices]
+		gt1_area = hull_gt_1.volume
+		hull_gt_1_tup = [tuple(m) for m in hull_gt1_vertices]
 
 	# Make convex hull of tumor2 ground truth points
-	hull_gt_2 = ConvexHull(points_gt2)
-	hull_gt2_vertices = hull_gt_2.points[hull_gt_2.vertices]
+	if len(points_gt2) != 0:
+		hull_gt_2 = ConvexHull(points_gt2)
+		hull_gt2_vertices = hull_gt_2.points[hull_gt_2.vertices]
+		gt2_area = hull_gt_2.volume
+		hull_gt_2_tup = [tuple(m) for m in hull_gt2_vertices]
 
 	# Make convex hull of tumor3 ground truth points
-	hull_gt_3 = ConvexHull(points_gt3)
-	hull_gt3_vertices = hull_gt_3.points[hull_gt_3.vertices]
+	if len(points_gt3) != 0:
+		hull_gt_3 = ConvexHull(points_gt3)
+		hull_gt3_vertices = hull_gt_3.points[hull_gt_3.vertices]
+		gt3_area = hull_gt_3.volume
+		hull_gt_3_tup = [tuple(m) for m in hull_gt3_vertices]
 
 	# In scipy, you have to use 'volume' to get area in 2D. If you use 'area', it gives perimeter
-	gt1_area = hull_gt_1.volume
-	gt2_area = hull_gt_2.volume
-	gt3_area = hull_gt_3.volume
+	# gt1_area = hull_gt_1.volume
+	# gt2_area = hull_gt_2.volume
+	# gt3_area = hull_gt_3.volume
 
 	# Convert list of lists to list of tuples
-	hull_gt_1_tup = [tuple(m) for m in hull_gt1_vertices]
-	hull_gt_2_tup = [tuple(m) for m in hull_gt2_vertices]
-	hull_gt_3_tup = [tuple(m) for m in hull_gt3_vertices]	
+	# hull_gt_1_tup = [tuple(m) for m in hull_gt1_vertices]
+	# hull_gt_2_tup = [tuple(m) for m in hull_gt2_vertices]
+	# hull_gt_3_tup = [tuple(m) for m in hull_gt3_vertices]	
 
 	# PALPATED POINTS
 	# tumor 1 palpated points
@@ -114,50 +124,89 @@ def compute_accuracy(ground_truth_stiffness, palpated_points):
 	palp_t3 = palpated_points[palpated_points[:,3] == 3,:2]
 
 	# Make convex hull of tumor1 palpated points
-	hull_palp_1 = ConvexHull(palp_t1)
-	hull_palp_1_vertices = hull_palp_1.points[hull_palp_1.vertices]
+	if len(palp_t1) != 0:
+		hull_palp_1 = ConvexHull(palp_t1)
+		hull_palp_1_vertices = hull_palp_1.points[hull_palp_1.vertices]
+		palp1_area = hull_palp_1.volume
+		hull_palp_1_tup = [tuple(m) for m in hull_palp_1_vertices]
 
 	# Make convex hull of tumor2 palpated points
-	hull_palp_2 = ConvexHull(palp_t2)
-	hull_palp_2_vertices = hull_palp_2.points[hull_palp_2.vertices]
+	if len(palp_t2) != 0:
+		hull_palp_2 = ConvexHull(palp_t2)
+		hull_palp_2_vertices = hull_palp_2.points[hull_palp_2.vertices]
+		palp2_area = hull_palp_2.volume
+		hull_palp_2_tup = [tuple(m) for m in hull_palp_2_vertices]
 
 	# Make convex hull of tumor3 palpated points
-	hull_palp_3 = ConvexHull(palp_t3)
-	hull_palp_3_vertices = hull_palp_3.points[hull_palp_3.vertices]
-
+	if len(palp_t3) != 0:
+		hull_palp_3 = ConvexHull(palp_t3)
+		hull_palp_3_vertices = hull_palp_3.points[hull_palp_3.vertices]
+		palp3_area = hull_palp_3.volume
+		hull_palp_3_tup = [tuple(m) for m in hull_palp_3_vertices]
 	# Get palpated point tumor areas
-	palp1_area = hull_palp_1.volume
-	palp2_area = hull_palp_2.volume
-	palp3_area = hull_palp_3.volume
+	# palp1_area = hull_palp_1.volume
+	# palp2_area = hull_palp_2.volume
+	# palp3_area = hull_palp_3.volume
 
 	# Convert numpy array to list of tuples
-	hull_palp_1_tup = [tuple(m) for m in hull_palp_1_vertices]
-	hull_palp_2_tup = [tuple(m) for m in hull_palp_2_vertices]
-	hull_palp_3_tup = [tuple(m) for m in hull_palp_3_vertices]
+	# hull_palp_1_tup = [tuple(m) for m in hull_palp_1_vertices]
+	# hull_palp_2_tup = [tuple(m) for m in hull_palp_2_vertices]
+	# hull_palp_3_tup = [tuple(m) for m in hull_palp_3_vertices]
+
+
+	tumor1_misclassified = 0
+	tumor2_misclassified = 0
+	tumor3_misclassified = 0
 
 	# Compute area of overlap
-	[inter_vertices1, tumor1_intersect_area] = convex_hull_intersection(hull_gt_1_tup, hull_palp_1_tup)
-	[inter_vertices2, tumor2_intersect_area] = convex_hull_intersection(hull_gt_2_tup, hull_palp_2_tup)
-	[inter_vertices3, tumor3_intersect_area] = convex_hull_intersection(hull_gt_3_tup, hull_palp_3_tup)
+	if len(palp_t1)!= 0 and len(points_gt1)!= 0:
+		[inter_vertices1, tumor1_intersect_area] = convex_hull_intersection(hull_gt_1_tup, hull_palp_1_tup)
+		# PERCENTAGE OF EACH TUMOR CORRECTLY CLASSIFIED
+		# tumor1_acc = tumor1_intersect_area*100/gt1_area
 
-	tumor1_acc = tumor1_intersect_area*100/gt1_area
-	tumor2_acc = tumor2_intersect_area*100/gt2_area
-	tumor3_acc = tumor3_intersect_area*100/gt3_area
+		area1 = make_circle(palp_t1)[2] * make_circle(palp_t1)[2] * 3.14159
+		if area1 >= gt1_area:
+			tumor1_acc = 100
+		else:
+			tumor1_acc = area1 / gt1_area
 
-	# PERCENTAGE OF EACH TUMOR CORRECTLY CLASSIFIED
-	print('Tumor {} has been classified with accuracy = {}%'.format(1, tumor1_acc))
-	print('Tumor {} has been classified with accuracy = {}%'.format(2, tumor2_acc))
-	print('Tumor {} has been classified with accuracy = {}%'.format(3, tumor3_acc))
+		print('Tumor {} has been classified with accuracy = {}%'.format(1, tumor1_acc))
+		# PERCENTAGE OF HEALTHY TISSUE MISCLASSIFIED
+		# tumor1_misclassified = math.fabs(palp1_area-tumor1_intersect_area)
+		tumor1_misclassified = math.fabs(palp1_area-area1)
 
-	# PERCENTAGE OF HEALTHY TISSUE MISCLASSIFIED
-	tumor1_misclassified = math.fabs(palp1_area-tumor1_intersect_area)
-	tumor2_misclassified = math.fabs(palp2_area-tumor2_intersect_area)
-	tumor3_misclassified = math.fabs(palp3_area-tumor3_intersect_area)
+	if len(palp_t2)!= 0 and len(points_gt2)!= 0:
+		[inter_vertices2, tumor2_intersect_area] = convex_hull_intersection(hull_gt_2_tup, hull_palp_2_tup)
+		# tumor2_acc = tumor2_intersect_area*100/gt2_area
+		area2 = make_circle(palp_t2)[2] * make_circle(palp_t2)[2] * 3.14159
+		if area2 >= gt2_area:
+			tumor2_acc = 100
+		else:
+			tumor2_acc = area2 / gt2_area
 
-	healthy_misclassified = (tumor1_misclassified + tumor2_misclassified + tumor3_misclassified)*100/ground_truth_area
+		print('Tumor {} has been classified with accuracy = {}%'.format(2, tumor2_acc))
+		# tumor2_misclassified = math.fabs(palp2_area-tumor2_intersect_area)
+		tumor2_misclassified = math.fabs(palp2_area-area2)
+
+	if len(palp_t3)!= 0 and len(points_gt3)!= 0:
+		[inter_vertices3, tumor3_intersect_area] = convex_hull_intersection(hull_gt_3_tup, hull_palp_3_tup)
+		# tumor3_acc = tumor3_intersect_area*100/gt3_area
+		area3 = make_circle(palp_t3)[2] * make_circle(palp_t3)[2] * 3.14159
+		if area3 >= gt3_area:
+			tumor3_acc = 100
+		else:
+			tumor3_acc = area3 / gt3_area
+
+		print('Tumor {} has been classified with accuracy = {}%'.format(3, tumor3_acc))
+		# tumor3_misclassified = math.fabs(palp3_area-tumor3_intersect_area)
+		tumor3_misclassified = math.fabs(palp3_area-area3)
+
+
+	healthy_misclassified = (tumor1_misclassified + tumor2_misclassified+ tumor3_misclassified)*100/ground_truth_area
 
 	print('Healthy tissue misclassified = {}%'.format(healthy_misclassified))
 	
+
 
 if __name__ == '__main__':
 	
