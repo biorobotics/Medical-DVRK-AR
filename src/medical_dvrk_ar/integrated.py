@@ -1,9 +1,10 @@
-from Modeling.pointcloud_sort_filter import filter_pointcloud_for_path_planner
-from Modeling.stiffness_map import stiffnessMap
-from dvrkPlanner.path_planner import Task_Planner
-from dvrkPlanner.path_planner_palpation import Task_Planner_palpation
-from dvrkPlanner.gp import *
-from Modeling.tumor_acc_intersect_convexHull import compute_accuracy
+# from Modeling.pointcloud_sort_filter import filter_pointcloud_for_path_planner
+# from Modeling.stiffness_map import stiffnessMap
+# from dvrkPlanner.path_planner import Task_Planner
+# from dvrkPlanner.path_planner_palpation import Task_Planner_palpation
+# from dvrkPlanner.gp import *
+# from Modeling.tumor_acc_intersect_convexHull import compute_accuracy
+from Modeling.visualize_stiffness import liverGrid
 
 import threading
 import numpy as np
@@ -86,3 +87,11 @@ if __name__=="__main__":
     print("Time used for data processing:", processing_end_time - processing_start_time)
     print("Time used for palpation:", palpation_end_time - palpation_start_time)
     print("Total time used:", end_time - start_time)
+
+
+    #visualize the results  Rviz topic "GroundTruth" & "liverStiffness"
+    visualization = liverGrid()
+    visualization.readArrayfromFile('../../data/points_with_stiffness.npy', '../../data/palpation_result.npy')
+    visualization.convert_array_to_pointcloud2()
+    visualization.publish_pointcloud()
+
