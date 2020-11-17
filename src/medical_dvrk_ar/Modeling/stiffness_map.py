@@ -30,8 +30,8 @@ class stiffnessMap:
 		'''		
 		liver_points_withNormals  = np.load(path) # could be Nx7 matrix
 		self.point_nparray = liver_points_withNormals[:,0:3] # will contain (x,y,z) coordinates of liver only
-		self.tumorLoc1 = self.point_nparray[100,:]+[0,0,0.001]
-		self.tumorLoc2 = self.point_nparray[1150,:]+[0,0,0.002]
+		self.tumorLoc1 = self.point_nparray[1305,:]+[0,0,0.001]
+		self.tumorLoc2 = self.point_nparray[116,:]+[0,0,0.002]
 		# self.tumorLoc2 = self.point_nparray[450,:]+[0,0,0.002]
 		self.tumorLoc3 = self.point_nparray[900,:]+[0,0,0.003]
 		self.point_stiff = np.copy(self.point_nparray)
@@ -56,9 +56,10 @@ class stiffnessMap:
 		'''
 		for i in range(self.point_nparray.shape[0]):
 			self.dist1[i] = np.linalg.norm(self.point_nparray[i][:3] - self.tumorLoc1[:3])
-			self.dist2[i] = np.linalg.norm(self.point_nparray[i][:3] - self.tumorLoc2[:3])
-			self.dist3[i] = np.linalg.norm(self.point_nparray[i][:3] - self.tumorLoc3[:3])
-			
+			# self.dist2[i] = np.linalg.norm(self.point_nparray[i][:3] - self.tumorLoc2[:3])
+			# self.dist3[i] = np.linalg.norm(self.point_nparray[i][:3] - self.tumorLoc3[:3])
+			self.dist2[i] = 100000
+			self.dist3[i] = 100000
 		# Decide which tumor the point is closest to (for heat map representation)
 		self.nearestTumorDist = np.minimum(np.minimum(self.dist1, self.dist2), self.dist3)
 
