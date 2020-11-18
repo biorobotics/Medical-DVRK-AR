@@ -1,9 +1,9 @@
-# from Modeling.pointcloud_sort_filter import filter_pointcloud_for_path_planner
-# from Modeling.stiffness_map import stiffnessMap
-# from dvrkPlanner.path_planner import Task_Planner
-# from dvrkPlanner.path_planner_palpation import Task_Planner_palpation
-# from dvrkPlanner.gp import *
-# from Modeling.tumor_acc_intersect_convexHull import compute_accuracy
+from Modeling.pointcloud_sort_filter import filter_pointcloud_for_path_planner
+from Modeling.stiffness_map import stiffnessMap
+from dvrkPlanner.path_planner import Task_Planner
+from dvrkPlanner.path_planner_palpation import Task_Planner_palpation
+from dvrkPlanner.gp import *
+from Modeling.tumor_acc_intersect_convexHull import compute_accuracy
 from Modeling.visualize_stiffness import liverGrid
 
 import threading
