@@ -92,8 +92,8 @@ if __name__=="__main__":
 
 
     #visualize the results  Rviz topic "GroundTruth" & "liverStiffness"
-    visualization = liverGrid()
-    visualization.readArrayfromFile('../../data/points_with_stiffness.npy', '../../data/palpation_result.npy')
+    visualization = liverGrid(args.amp, args.freq)
+    visualization.readArrayfromFile('../../data/palpation_result.npy','../../data/points_with_stiffness.npy')
     visualization.convert_array_to_pointcloud2()
     visualization.publish_pointcloud()
 

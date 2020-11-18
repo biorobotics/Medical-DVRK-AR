@@ -21,7 +21,7 @@ from std_msgs.msg import Header
 
 
 class liverGrid:
-    def __init__(self):
+    def __init__(self, amp, freq):
         #ros node
         rospy.init_node('liverGrid', anonymous=True)
 
@@ -45,7 +45,8 @@ class liverGrid:
         self.header_t.frame_id = "PSM1_psm_base_link" # the 3dpcl is in a new frame
         self.pc2_t = point_cloud2.create_cloud(self.header_t, self.fields_t, self.point_cloud_t)
         self.point_nparray_t = []
-        
+        self.amp = amp
+        self.freq = freq
 
     def convert_array_to_pointcloud2(self):
         """
@@ -57,29 +58,36 @@ class liverGrid:
             column 7: Value 1 if part of tumor, 0 if not 
         return: pointcloud2
         """
+        self.point_cloud = []
         for i in range(self.point_nparray.shape[0]):
             r = np.int(np.floor(self.point_nparray[i,5]*255))
             gb=100-r if (r<100)else 0
             r = 50+r if(r<205)else r
             rgb = self.compressRGBA(r, gb, gb)
             rgb = 4000000000
-            self.point_cloud.append([self.point_nparray[i,0], self.point_nparray[i,1], self.point_nparray[i,2], rgb])
-
+            init_points = [self.point_nparray[i,0], self.point_nparray[i,1], self.point_nparray[i,2] - 0.01, rgb]
+            est_points = self.estimation_numpy(init_points,self.amp,self.freq,0, rospy.get_rostime().to_sec())
+            self.point_cloud.append(est_points)
+            # self.point_cloud.append([self.point_nparray[i,0], self.point_nparray[i,1], self.point_nparray[i,2], rgb])
         self.pc2 = point_cloud2.create_cloud(self.header, self.fields, self.point_cloud)
 
-
+        self.point_cloud_t = []
         for i in range(self.point_nparray_t.shape[0]):
             r = np.int(np.floor(self.point_nparray_t[i,5]*255))
             gb=100-r if (r<100)else 0
             r = 50+r if(r<205)else r
             rgb = self.compressRGBA(r, gb, gb)
             rgb = 2000000000
-            self.point_cloud_t.append([self.point_nparray_t[i,0], self.point_nparray_t[i,1], self.point_nparray_t[i,2], rgb])
+            init_points_t = [self.point_nparray_t[i,0], self.point_nparray_t[i,1], self.point_nparray_t[i,2], rgb]
+            est_points_t = self.estimation_numpy(init_points_t,self.amp,self.freq,0, rospy.get_rostime().to_sec())
+            self.point_cloud_t.append(est_points_t)
+            # self.point_cloud_t.append([self.point_nparray_t[i,0], self.point_nparray_t[i,1], self.point_nparray_t[i,2], rgb])
 
         self.pc2_t = point_cloud2.create_cloud(self.header_t, self.fields_t, self.point_cloud_t)
 
     def publish_pointcloud(self):
         while not rospy.is_shutdown():
+            self.convert_array_to_pointcloud2()
             self.pc2.header.stamp = rospy.Time.now()
             self.pub.publish(self.pc2)
             self.pc2_t.header.stamp = rospy.Time.now()
@@ -124,6 +132,19 @@ class liverGrid:
 
         # Convert the 0-1 range into a value in the right range.
         return rightMin + (valueScaled * rightSpan)
+    def estimation_numpy(self, data, amp, freq, sim_start_time, time):
+        # Input:    1) data(numpy.array): point location
+        #           2) time: future time i
+        #           3) amp: amplitude of the motion
+        #           4) freq: frequency of the motion
+        #           5) sim_start_time: simulationn start time
+        #           6) time: future time
+        # Output:   1) pose(numpy.array): predicted point location    pose_z = data[2]
+        run_time = time - sim_start_time
+        pose_z = data[2]
+        pose_Z = pose_z + float(amp) * math.sin(float(freq) * run_time)
+        data[2] = pose_Z
+        return data
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='read the stiffness map and visualize it.')
@@ -132,5 +153,5 @@ if __name__ == "__main__":
 
     liverGrid = liverGrid()
     a = liverGrid.readArrayfromFile(args.path)
-    liverGrid.convert_array_to_pointcloud2()
+    # liverGrid.convert_array_to_pointcloud2()
     liverGrid.publish_pointcloud()
