@@ -95,7 +95,7 @@ class ControlServer(object):
         self.freq = frequency
         #tested with API then copy and paste the value
         self.home_pose = PyKDL.Frame()
-        self.home_pose.p = PyKDL.Vector(4.16909e-07, 4.50335e-07, -0.1135)
+        self.home_pose.p = PyKDL.Vector(0.0, 0.0, -0.12)
         self.home_pose.M = PyKDL.Rotation(-2.69849e-11, 1, -9.91219e-17,1, 2.69849e-11,  7.34641e-06,7.34641e-06,  9.91194e-17,-1)
 
         # testing estimation
@@ -171,7 +171,7 @@ class ControlServer_palpation(object):
     def __init__(self, amplitude, frequency,data):
 
         self.robot = psm('PSM1')
-        self.robot.home()
+        # self.robot.home()
 
         rate = 1000.0
         # TODO make these values not hard coded
@@ -201,7 +201,7 @@ class ControlServer_palpation(object):
         self.data = data
 
         self.home_pose = PyKDL.Frame()
-        self.home_pose.p = PyKDL.Vector(4.16909e-07, 4.50335e-07, -0.1135)
+        self.home_pose.p = PyKDL.Vector(0.0, 0.0, -0.12)
         self.home_pose.M = PyKDL.Rotation(-2.69849e-11, 1, -9.91219e-17,1, 2.69849e-11,  7.34641e-06,7.34641e-06,  9.91194e-17,-1)
 
         # testing estimation
@@ -230,23 +230,24 @@ class ControlServer_palpation(object):
             nextPose = PyKDL.addDelta(currentPose,xDotMotion,self.resolvedRatesConfig['dt'])
             
 
-            if (xDotMotion.vel.Norm() <= 0.002 and xDotMotion.rot.Norm() <= 0.1) or count > 20000:
+            if (xDotMotion.vel.Norm() <= 0.002 and xDotMotion.rot.Norm() <= 0.1) or count > 10000:
                 break    
 
             # calculate the surface at the next time step   
-            static_point_height = estimation_reve_numpy(np.array([nextPose.p[0], nextPose.p[1], nextPose.p[2]]), self.amp, self.freq, 0, rospy.Time.now().to_sec())[2]
+            # static_point_height = estimation_reve_numpy(np.array([nextPose.p[0], nextPose.p[1], nextPose.p[2]]), self.amp, self.freq, 0, rospy.Time.now().to_sec())[2]
             # print(static_point_height == nextPose.p[2])
-            closest_point = nearest_point(np.array([nextPose.p[0], nextPose.p[1], static_point_height]), self.data[:,:3])
-            surface_height = estimation_numpy(closest_point, self.amp, self.freq, 0, rospy.Time.now().to_sec())[2]
+            # closest_point = nearest_point(np.array([nextPose.p[0], nextPose.p[1], static_point_height]), self.data[:,:3])
+            # surface_height = estimation_numpy(closest_point, self.amp, self.freq, 0, rospy.Time.now().to_sec())[2]
             
-            if (nextPose.p[2] < surface_height):
-                nextPose.p[2] = surface_height  + self.toolOffset
+            # if (nextPose.p[2] < surface_height):
+                # nextPose.p[2] = surface_height  + self.toolOffset
             
             currentPose = nextPose
             self.robot.move(currentPose, interpolate = False)
             self.rate.sleep()
     def homing(self):
         self.move(self.home_pose, self.maxForce)
+        print("robot homed")
 
         return
 if __name__=="__main__":

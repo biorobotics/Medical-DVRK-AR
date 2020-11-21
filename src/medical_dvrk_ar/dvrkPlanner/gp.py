@@ -145,6 +145,7 @@ class gpr_palpation():
         self.locations = data[:,0:2]
         # self.server is the motion server for the robot
         self.server = ControlServer_palpation(amplitude, frequency, self.data)
+        self.server.homing()
         # self.number_of_data is the total number of data points
         self.number_of_data = data.shape[0]
         # self.data_probed record whether a point has been probed
@@ -261,7 +262,7 @@ class gpr_palpation():
             dest = make_PyKDL_Frame(self.data[point_index])
             # move to a intermediate safe zone before "poking"
             tmp_dest = copy.copy(dest)
-            tmp_dest.p[2] += 0.03
+            tmp_dest.p[2] += 0.035
             self.server.move(tmp_dest, self.server.maxForce)
 
             self.server.move(dest, self.server.maxForce)
@@ -283,6 +284,7 @@ class gpr_palpation():
                 self.probedPoints = self.probedPoints[:len(self.probedPoints)-1]
                 return
             stiffness = np.array([stiffness])
+            self.server.move(tmp_dest, self.server.maxForce)
 
         self.stiffnessCollected.append(stiffness.tolist())
         # print("All points probed:", self.probedPoints)
