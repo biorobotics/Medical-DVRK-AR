@@ -7,6 +7,7 @@ from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
 from scipy.stats import multivariate_normal, norm
 from scipy.interpolate import griddata
 import PIL
+import copy
 
 import rospy
 from sensor_msgs.msg import Image
@@ -258,6 +259,11 @@ class gpr_palpation():
             ##### motion compensation
             self.data_probed[point_index] = 1
             dest = make_PyKDL_Frame(self.data[point_index])
+            # move to a intermediate safe zone before "poking"
+            tmp_dest = copy.copy(dest)
+            tmp_dest.p[2] += 0.03
+            self.server.move(tmp_dest, self.server.maxForce)
+
             self.server.move(dest, self.server.maxForce)
             # append current pose data
             currentPose = self.server.robot.get_current_position() #PyKDLFrame
