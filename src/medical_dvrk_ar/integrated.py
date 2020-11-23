@@ -26,6 +26,7 @@ if __name__=="__main__":
     # file_path = "/home/alex/MRSD_sim/src/Medical-DVRK-AR/data"
     file_path = args.path
 
+
     print("loading stiffness data")
     stiffnessMap = stiffnessMap(file_path+"xyz_for_stiffness_est.npy", 'h')
     stiffnessMap.getStiffnessMap()
@@ -33,10 +34,12 @@ if __name__=="__main__":
     print("loading scanning path")
     data = np.load(file_path+"scanning_path_200_points.npy")
     # # turn this into argparse so that we can change amp and freq easily
-    amplitude = args.amp #0.02
-    frequency = args.freq #0.5
+    amplitude = float(args.amp) #0.02
+    frequency = float(args.freq) #0.5
 
     finished = False
+
+
 
     scanning_start_time = time.time()
     print("starting scan")
@@ -45,8 +48,10 @@ if __name__=="__main__":
     print("finished scan")
     scanning_end_time = time.time()
     print("Time used for scanning:", scanning_end_time- scanning_start_time)
-    # # open blaser results and do pointcloud palpation filter somehow
+  
 
+
+    ### open blaser results and do pointcloud palpation filter somehow
     print("processing blaser results")
     processing_start_time = time.time()
     blaser_data_name = "blaser_results.npy"
@@ -78,12 +83,13 @@ if __name__=="__main__":
     palpation_end_time = time.time()
     print("Time used for palpation:", palpation_end_time - palpation_start_time)
 
+
     ground_truth_stiffness = np.load('../../data/points_with_stiffness.npy')
     print(ground_truth_stiffness.shape)
-    palpated_map = np.load('../../data/palpation_result.npy')
+    palpated_map = np.load('../../data/palpation_result_200.npy')
     print(palpated_map.shape)
     compute_accuracy(ground_truth_stiffness, palpated_map)
-    end_time = time.time()
+    #end_time = time.time()
 
     print("Time used for scanning:", scanning_end_time- scanning_start_time)
     print("Time used for data processing:", processing_end_time - processing_start_time)

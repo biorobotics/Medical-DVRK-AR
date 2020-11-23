@@ -148,10 +148,11 @@ class liverGrid:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='read the stiffness map and visualize it.')
-    parser.add_argument('--path',help='the path to the stiffness npy file')
+    parser.add_argument('--path',help='the path to the palpation result stiffness npy file')
+    parser.add_argument('--path_gt',help='the path to the stiffness npy file')
     args = parser.parse_args()
 
-    liverGrid = liverGrid()
-    a = liverGrid.readArrayfromFile(args.path)
+    liverGrid = liverGrid(0.02, 0.5)
+    a = liverGrid.readArrayfromFile(args.path, args.path_gt)
     # liverGrid.convert_array_to_pointcloud2()
     liverGrid.publish_pointcloud()

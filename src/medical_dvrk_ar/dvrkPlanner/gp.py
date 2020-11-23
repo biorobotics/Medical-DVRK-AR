@@ -24,6 +24,8 @@ import os.path
 from util import make_PyKDL_Frame, calculate_stiffness, nearest_point
 from robot_motion import ControlServer_palpation
 
+import time
+
 np.random.seed(1)
 
 class aquisition_algorithm(object):
@@ -275,7 +277,7 @@ class gpr_palpation():
             translation[2] -= offset_z
             #print("translation",translation)
             which_tumor, euclid_norm, stiffness, tumor_or_not = calculate_stiffness(translation, self.dest_folder)[:]
-            print("stiffness of new point:", stiffness)
+            #print("stiffness of new point:", stiffness)
             point_data = (translation[0],translation[1],translation[2], which_tumor, euclid_norm, stiffness, tumor_or_not)
             self.output_nparray.append(point_data)
     
@@ -336,22 +338,29 @@ class gpr_palpation():
                     rate.sleep()
                     continue
                 i = i + 1
-                print('Probing point: '+str(i))
+                #print('Probing point: '+str(i))
                 x_probe = self.grid[self.ind,:]
                 self.probe(x_probe,self.ind)
                 self.ind = self.nextBestPoint(self.algorithm_class) #Here change which algorithm you want
         else:
             for i in range(num_of_probes):
                 x_probe = self.locations[self.ind]
-                print("Probing index:", self.ind)
+                #print("Probing index:", self.ind)
                 self.probe(x_probe, self.ind)
-                self.ind = self.nextBestPoint(self.algorithm_class) #Here change which algorithm you want
+                if i < 20:
+                    self.ind = np.random.randint(self.number_of_data)
+                    while self.data_probed[self.ind]:
+                        self.ind = np.random.ranint(self.number_of_data)
+                else:
+                    self.ind = self.nextBestPoint(self.algorithm_class) #Here change which algorithm you want
 
                 # update output file after probing every N points
-                update_rate = 10
+                update_rate = 50
                 file_path = self.dest_folder + "/"
-                file_name = "palpation_result.npy"
-                if i % update_rate == 0:
+                file_name = "palpation_result_" + str(i+1) + ".npy"
+                if (i+1) % update_rate == 0:
+                    current_time = time.time()
+                    print("Palpation time for" + str(i+1) + "pokes:", current_time - start_time)
                     np.save(file_path+file_name, np.array(self.output_nparray))
                 # break if reach the end of the list
                 if i >= num_of_probes-1:
@@ -377,7 +386,9 @@ if __name__ == "__main__":
 
     # visualize ground truth
     #gpr.visualize_map(map=gpr.groundTruth,title='Ground Truth', figure=1)
-    gpr.autoPalpation(100)
+    global start_time 
+    start_time = time.time()
+    gpr.autoPalpation(200)
 
     
 # plt.show()
