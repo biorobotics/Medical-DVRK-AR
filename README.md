@@ -1,4 +1,6 @@
-# DVRK Augmented reality using laser scanner
+# Augmented Reality for Minimally Invasive Surgery
+
+Link to project website: https://mrsdprojects.ri.cmu.edu/2020teama/
 
 ## Installation
 
